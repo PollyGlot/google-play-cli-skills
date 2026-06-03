@@ -2,7 +2,3 @@
 .DS_Store
 *.swp
 *~
-
-# Python linter bytecode
-__pycache__/
-*.pyc

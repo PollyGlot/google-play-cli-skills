@@ -73,14 +73,8 @@ description: <what it does> … Use when <the trigger phrasing>.
 - **`description`** — one line, ends with a "Use when …" clause so an agent
   can decide relevance. This is the same text shown in the catalogue above.
 
-CI lints this frontmatter on every push (see
-[`.github/workflows/lint-skills.yml`](.github/workflows/lint-skills.yml)) and
-fails the build if a `name` or `description` is missing or malformed. Run the
-check locally with:
-
-```bash
-python3 scripts/lint_skill_frontmatter.py
-```
+A missing or malformed `name`/`description` breaks `npx skills add`, so keep
+both fields present and well-formed when adding a skill.
 
 ## License
 
