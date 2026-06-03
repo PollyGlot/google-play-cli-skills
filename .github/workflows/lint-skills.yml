@@ -1,0 +1,29 @@
+name: lint-skills
+
+# Lint the YAML frontmatter of every skills/*/SKILL.md. Fails the build if a
+# skill is missing its `name`/`description` or they are malformed. Stdlib
+# Python only — no dependencies to install.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontmatter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Self-test the linter (proves it rejects malformed frontmatter)
+        run: python3 scripts/lint_skill_frontmatter.py --self-test
+
+      - name: Lint SKILL.md frontmatter
+        run: python3 scripts/lint_skill_frontmatter.py
