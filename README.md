@@ -37,6 +37,11 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
 | [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
 
+> **Also covered by the foundation skill:** `gplay schema` — the offline,
+> no-auth Android Publisher API introspection command (shipped in gplay
+> v0.5.0, `[experimental]`). It has no dedicated skill yet; `gplay-cli-usage`
+> documents it next to `--help`.
+
 ## Roadmap
 
 The v1 set above tracks the current `gplay` GA surface. Skills for gated
@@ -47,7 +52,7 @@ surfaces land as those CLI surfaces ship:
 - **gplay-subscription-management** — subscriptions & IAP (+ RevenueCat) —
   gated on [`#51`](https://github.com/PollyGlot/google-play-cli/issues/51).
 
-See [`PollyGlot/google-play-cli#53`](https://github.com/PollyGlot/google-play-cli/issues/53)
+See the CLI's [`docs/BACKLOG.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/BACKLOG.md)
 for the full roster and gating.
 
 ## Repo layout

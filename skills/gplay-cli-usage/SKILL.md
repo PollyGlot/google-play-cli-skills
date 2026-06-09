@@ -1,6 +1,6 @@
 ---
 name: gplay-cli-usage
-description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the implicit Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, or building a more specific gplay workflow on top of these rules.
+description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the implicit Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, introspecting the Android Publisher API surface offline with `gplay schema`, or building a more specific gplay workflow on top of these rules.
 ---
 
 # gplay CLI conventions (foundation)
@@ -27,6 +27,23 @@ gplay exit-codes                   # the semantic exit-code table
 ```
 
 If this skill and `--help` ever disagree, trust `--help`.
+
+## `gplay schema` — the offline API map
+
+Where `--help` documents gplay's own surface, `gplay schema` introspects the
+underlying **Android Publisher API** offline (no credential, no HTTP call) from
+an index compiled into the binary — does a method exist, what does it send and
+return, what fields and enums does a type carry:
+
+```bash
+gplay schema --list                 # compact catalog: id · http · path
+gplay schema tracks                 # match across method id, REST path, type name
+gplay schema Track                  # expand a schema's fields, types, enums
+gplay schema edits.tracks.update    # a method's request/response, one hop deep
+gplay schema --method PATCH         # filter the method surface by HTTP verb
+```
+
+`[experimental]` (gplay v0.5.0) — confirm the surface with `gplay schema --help`.
 
 ## Which credential / account (resolution order)
 
@@ -60,7 +77,10 @@ no `--package`. Managing the registry of packages is the `gplay-apps` skill.
 (ADR-0005): a human table on a terminal, JSON when piped or in CI. For
 machine consumption, ask for `--output json` explicitly — read commands pass
 the API payload through (ADR-0003), and write commands return the request/diff
-body, so a CI gate is usually one `jq` line.
+body, so a CI gate is usually one `jq` line. The pass-through promise is about
+*not reshaping the API*, not that every `--output json` is an API echo: the
+**offline reference** commands that wrap no API call — `team permissions` and
+`schema` — synthesize their own (gplay-owned, documented) JSON instead.
 
 **stdout is data, stderr is logs.** Parse stdout; warnings, progress, and
 `-v/--verbose` flow steps go to stderr and never pollute the JSON. (Example:
