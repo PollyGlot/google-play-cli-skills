@@ -1,5 +1,7 @@
 # google-play-cli-skills
 
+[![skills.sh](https://skills.sh/b/PollyGlot/google-play-cli-skills)](https://skills.sh/PollyGlot/google-play-cli-skills)
+
 Agent skills for [**gplay**](https://github.com/PollyGlot/google-play-cli) — a
 fast, single-binary CLI for the Google Play Developer API. Each skill is a
 `SKILL.md` of plain-Markdown instructions that teaches an AI agent (Claude Code
