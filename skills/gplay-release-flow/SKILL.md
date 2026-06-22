@@ -1,6 +1,6 @@
 ---
 name: gplay-release-flow
-description: Ship Android releases through Google Play with the gplay CLI — upload an AAB to a track, promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), and inspect what is live on a track. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, or checking which releases sit on a track.
+description: Ship Android releases through Google Play with the gplay CLI — upload an AAB to a track, promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), inspect what is live on a track, and list or download the signed APKs Play generates from an uploaded AAB. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, checking which releases sit on a track, or fetching the exact split/standalone/universal artifacts Play serves.
 ---
 
 # gplay release flow
@@ -123,6 +123,62 @@ and shows every release on it — draft, inProgress, halted, completed. For a
 cross-track or whole-track view use the `gplay-tracks` skill (`gplay tracks
 list` / `gplay tracks view`).
 
+## Generated APKs: list + download what Play signs from your AAB
+
+After an upload, Play **generates and signs** the APKs it actually serves to
+devices from your AAB — split, standalone, and universal APKs, plus asset-pack
+and recovery-module slices. The `generated` sub-surface lists their download
+metadata and fetches the raw signed bytes — handy to verify the signing
+identity, sideload, or archive the exact artifacts Play serves after a
+`releases upload`. Both commands are **`[experimental]`**; confirm flags with
+`gplay releases generated --help`.
+
+```bash
+gplay releases generated list --version-code 42
+gplay releases generated list --version-code 42 --output json
+gplay releases generated download <downloadId> --version-code 42 --dest ./universal.apk
+gplay releases generated download <downloadId> --version-code 42 --dest -   # stream to stdout
+```
+
+These reads are **Edit-free**: unlike `releases list`, the `generatedapks`
+endpoints are **application-scoped** (not under an Edit), so gplay issues a
+direct GET. Don't pattern-match `releases list` and wrap an Edit around them —
+the endpoints don't accept one. They are pure reads needing only that the
+service account is invited on the app: **no** Edit, **no** financial capability.
+
+### `generated list` — enumerate the artifacts (keyed by `--version-code`)
+
+`--version-code N` is **required** — it addresses the uploaded bundle. The API
+groups the artifacts by signing key; gplay **flattens** that envelope into one
+row per artifact — *type · module · split/variant/slice id · downloadId · short
+cert hash* — so you can scan every generated artifact at once. `--output json`
+stays the verbatim `GeneratedApksListResponse` (ADR-0003), the signing-key
+groups intact, for machines.
+
+Read each artifact's **Download ID** (the `downloadId` field) from this list —
+it is the opaque handle you hand to `download`. It is **not a URL** and **not
+stable** across re-generation, so always read a fresh one from `list` rather
+than caching it.
+
+### `generated download` — fetch one artifact's bytes to a file
+
+This is gplay's first **binary download-to-file** gesture (ADR-0034), so it has
+its own conventions, distinct from the structured reads above:
+
+- The **Download ID** is the **positional** argument (the addressed artifact);
+  `--version-code N` is still required to locate the bundle.
+- Destination is **`--dest PATH`** (required), **not `--output`** — the payload
+  is opaque bytes, not a renderable table, so this command does **not** expose
+  the global `--output json|table|markdown` flag. Use **`--dest -`** to stream
+  the bytes to stdout for piping.
+- Bytes are **streamed** to the file, never buffered whole (a universal APK can
+  be large). On success a **`✓`** line on **stderr** names the byte count and
+  destination; stdout stays the data path.
+
+Exit codes match the rest of the cluster: `11` the service account is not
+invited on the app (403), `30` an unknown version code or Download ID (404),
+`40`/`50` retry-safe (5xx / network).
+
 ## Production safety is built in
 
 gplay defaults to the cautious choice on `production` (ADR-0002): an upload or
@@ -170,4 +226,8 @@ gplay releases resume --track production --confirm
 
 # Preview a production promote without sending anything
 gplay releases promote --from beta --to production --staged 0.1 --confirm --dry-run
+
+# After an upload: see what Play generated, then archive one artifact
+gplay releases generated list --version-code 42
+gplay releases generated download <downloadId> --version-code 42 --dest ./universal.apk
 ```
