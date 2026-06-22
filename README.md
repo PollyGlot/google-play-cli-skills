@@ -38,6 +38,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-metadata-sync`](skills/gplay-metadata-sync/SKILL.md) | Editing store listings or screenshots, migrating listing text into version control, localizing a listing, or gating a listing change in CI before it goes live. |
 | [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
 | [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
+| [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a managed Google Play private (organisation-scoped) app from an AAB/APK — the one Play API path that creates an app record. Irreversible, so `--confirm`-gated and capability-gated. |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
 > no-auth Android Publisher API introspection command (shipped in gplay
