@@ -151,9 +151,10 @@ service account is invited on the app: **no** Edit, **no** financial capability.
 `--version-code N` is **required** — it addresses the uploaded bundle. The API
 groups the artifacts by signing key; gplay **flattens** that envelope into one
 row per artifact — *type · module · split/variant/slice id · downloadId · short
-cert hash* — so you can scan every generated artifact at once. `--output json`
-stays the verbatim `GeneratedApksListResponse` (ADR-0003), the signing-key
-groups intact, for machines.
+cert hash* — so you can scan every generated artifact at once; narrow it with
+`--columns` (e.g. `--columns type,downloadId,cert`). `--output json` stays the
+verbatim `GeneratedApksListResponse` (ADR-0003), the signing-key groups intact,
+for machines.
 
 Read each artifact's **Download ID** (the `downloadId` field) from this list —
 it is the opaque handle you hand to `download`. It is **not a URL** and **not
@@ -174,10 +175,16 @@ its own conventions, distinct from the structured reads above:
 - Bytes are **streamed** to the file, never buffered whole (a universal APK can
   be large). On success a **`✓`** line on **stderr** names the byte count and
   destination; stdout stays the data path.
+- A **failed transfer leaves no file behind**: gplay removes the partial APK on
+  any transport or close error, so a non-zero exit never strands a truncated
+  artifact you might mistake for a good one.
 
-Exit codes match the rest of the cluster: `11` the service account is not
-invited on the app (403), `30` an unknown version code or Download ID (404),
-`40`/`50` retry-safe (5xx / network).
+Exit codes: both commands return `11` (403 — the service account is not invited
+on the app), `30` (404 — unknown package/version code, none generated, or
+unknown Download ID), and `40`/`50` (retry-safe 5xx / network). `download` adds
+`20` when the `--dest` path can't be written (local IO). A missing
+`--version-code` / `--dest` / `<downloadId>` is usage (exit `2`), caught before
+any network call.
 
 ## Production safety is built in
 
