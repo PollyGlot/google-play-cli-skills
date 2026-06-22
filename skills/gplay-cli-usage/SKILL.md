@@ -96,6 +96,7 @@ body, so a CI gate is usually one `jq` line. The pass-through promise is about
 | 1 | Generic error (fallback) | no |
 | 2 | CLI misuse (unknown flag/command, bad value, missing arg) | no |
 | 3 | A named safety flag is missing (`--confirm` / `--grant-admin`) — re-run with it | yes, with the flag |
+| 4 | Denied by environment policy (`GPLAY_READONLY`) — a mutating command was refused | no — change the environment |
 | 10 | Authentication failure | no |
 | 11 | Authorization (403 — SA not invited) | no |
 | 20 | Client-side validation (bad AAB, unknown locale, …) | no |
@@ -104,8 +105,9 @@ body, so a CI gate is usually one `jq` line. The pass-through promise is about
 | 50 | Network (timeout, DNS, refused) | **yes** |
 | 60 | State conflict (open edit, rate-limited, ambiguous target) | sometimes |
 
-Agents should treat `3` as "append the named flag and re-run", `40`/`50` as
-"back off and retry", and `2`/`10`/`11`/`20`/`30` as "fix the input, do not
+Agents should treat `3` as "append the named flag and re-run", `4` as "the
+environment forbids this write — do not retry, change the deployment", `40`/`50`
+as "back off and retry", and `2`/`10`/`11`/`20`/`30` as "fix the input, do not
 retry blindly".
 
 ## Safety: `--dry-run` everywhere, `--confirm` for live writes
@@ -118,9 +120,19 @@ retry blindly".
   it fails with exit `3` and names the flag. `CI=true` never auto-confirms.
 - **`--grant-admin`** is the stronger gate for conferring admin in
   `gplay-team`.
+- **`GPLAY_READONLY=1`** (truthy = enforced) is the environment-level guard for
+  agent deployments that must only read. Because the safety flags above are
+  *advisory* — an agent holding the credential can pass them itself — set this in
+  the environment and the kernel refuses **every mutating command** before
+  credential resolution and before any network call, regardless of flags, while
+  read commands and `--dry-run` previews keep working. Its refusal exits **`4`**
+  (denied by environment policy) — which, unlike `3`, is **not** resolvable by
+  adding a flag; the only fix is to change the environment.
 
-When a write refuses, the message names the missing flag — that refusal is
-*agent-resolvable* (ADR-0017): re-run with the flag it asked for.
+When a write refuses for a missing flag, the message names it — that refusal is
+*agent-resolvable* (ADR-0017): re-run with the flag it asked for. The
+`GPLAY_READONLY` refusal (exit `4`) is the deliberate exception: it is **not**
+agent-resolvable.
 
 ## The Edit lifecycle is abstracted
 
