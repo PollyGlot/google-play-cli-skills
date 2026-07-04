@@ -16,9 +16,11 @@ are in `gplay-cli-usage`. The whole namespace is `[experimental]`.
 ## Addressing: `--application-id`, not `--package`
 
 This is the trap. Play Games resources are keyed by the **numeric Play Games
-application ID** (a distinct ID space), *not* the Android package name. Every
-`games` command takes **`--application-id <numeric-id>`** (required on `list` /
-`create`); the `.gplay/config.json` package pin does **not** apply here.
+application ID** (a distinct ID space), *not* the Android package name.
+**`--application-id <numeric-id>` is required on `list` and `create`**; the
+per-resource commands `view` / `update` / `delete` are addressed by the
+achievement/leaderboard id alone (no `--application-id`). The
+`.gplay/config.json` package pin does **not** apply anywhere here.
 
 ```bash
 gplay games achievements list --application-id 1234567890
@@ -68,7 +70,7 @@ gplay games leaderboards create --application-id 123 \
 partial edit, read the current config, edit it, and resend it whole:
 
 ```bash
-gplay games achievements view <id> --application-id 123 --output json > ach.json
+gplay games achievements view <id> --output json > ach.json
 # edit ach.json …
 gplay games achievements update <id> --from-json ach.json
 ```
