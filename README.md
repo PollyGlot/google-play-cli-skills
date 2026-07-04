@@ -39,6 +39,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
 | [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
 | [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a managed Google Play private (organisation-scoped) app from an AAB/APK — the one Play API path that creates an app record. Irreversible, so `--confirm`-gated and capability-gated. |
+| [`gplay-recovery`](skills/gplay-recovery/SKILL.md) | Responding to a bad release: staging a draft app recovery, deploying it to force-update impacted users off the broken versionCode, widening its audience (append-only), or cancelling it. Deploy/cancel/add-targeting are `--confirm`-gated. |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
 > no-auth Android Publisher API introspection command (shipped in gplay
