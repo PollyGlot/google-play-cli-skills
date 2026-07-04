@@ -42,6 +42,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-vitals`](skills/gplay-vitals/SKILL.md) | Reading post-launch quality signals — crash / ANR / slow-start / rendering / wakeup / LMK rates, error reports and clustered issues, and Play-detected anomalies. Read-only, on the distinct Play Developer Reporting service (its own OAuth scope). |
 | [`gplay-orders`](skills/gplay-orders/SKILL.md) | Looking up a Google Play order by its order ID (single or batch) from a complaint or payout report, or issuing a refund. Refund moves money and is `--confirm`-gated; both need explicit financial capabilities never bundled into a role. |
 | [`gplay-games`](skills/gplay-games/SKILL.md) | Configuring a game's Play Games Services achievements and leaderboards (list/view/create/update/delete), addressed by the numeric Play Games application ID (not the package). Draft-only — publishing to players stays Console-only. |
+| [`gplay-recovery`](skills/gplay-recovery/SKILL.md) | Responding to a bad release: staging a draft app recovery, deploying it to force-update impacted users off the broken versionCode, widening its audience (append-only), or cancelling it. Deploy/cancel/add-targeting are `--confirm`-gated. |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
 > no-auth Android Publisher API introspection command (shipped in gplay
