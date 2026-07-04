@@ -39,6 +39,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
 | [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
 | [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a managed Google Play private (organisation-scoped) app from an AAB/APK — the one Play API path that creates an app record. Irreversible, so `--confirm`-gated and capability-gated. |
+| [`gplay-vitals`](skills/gplay-vitals/SKILL.md) | Reading post-launch quality signals — crash / ANR / slow-start / rendering / wakeup / LMK rates, error reports and clustered issues, and Play-detected anomalies. Read-only, on the distinct Play Developer Reporting service (its own OAuth scope). |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
 > no-auth Android Publisher API introspection command (shipped in gplay
@@ -50,8 +51,6 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 The v1 set above tracks the current `gplay` GA surface. Skills for gated
 surfaces land as those CLI surfaces ship:
 
-- **gplay-vitals** — Android vitals (crashes / ANRs) — gated on
-  [`#49`](https://github.com/PollyGlot/google-play-cli/issues/49).
 - **gplay-subscription-management** — subscriptions & IAP (+ RevenueCat) —
   gated on [`#51`](https://github.com/PollyGlot/google-play-cli/issues/51).
 
