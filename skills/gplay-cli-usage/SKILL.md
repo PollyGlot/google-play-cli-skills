@@ -1,6 +1,6 @@
 ---
 name: gplay-cli-usage
-description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the implicit Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, introspecting the Android Publisher API surface offline with `gplay schema`, or building a more specific gplay workflow on top of these rules.
+description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the Edit lifecycle (implicit per-command, or explicit `edits begin/commit/discard` transactions). Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, introspecting the Android Publisher API surface offline with `gplay schema`, or building a more specific gplay workflow on top of these rules.
 ---
 
 # gplay CLI conventions (foundation)
@@ -134,15 +134,40 @@ When a write refuses for a missing flag, the message names it — that refusal i
 `GPLAY_READONLY` refusal (exit `4`) is the deliberate exception: it is **not**
 agent-resolvable.
 
-## The Edit lifecycle is abstracted
+## The Edit lifecycle — implicit by default, explicit when you batch
 
 Google Play mutations run inside a transactional **Edit**
-(`edits.insert → change → edits.commit`). gplay performs the whole three-step
-dance **implicitly** in a single command: each write opens its own Edit, makes
-the change, and commits, discarding the Edit automatically on failure. You do
-not manage Edit IDs by hand. `--keep-edit-on-failure` skips that auto-discard
-for debugging. (A couple of surfaces sit *outside* the Edit model on purpose —
-e.g. `compliance datasafety` is a direct write — their skills call that out.)
+(`edits.insert → change → edits.commit`). gplay offers two ways to drive it.
+
+**Implicit (the default).** Each write command performs the whole three-step
+dance on its own: it opens its own Edit, makes the change, and commits,
+discarding the Edit automatically on failure. You do not manage Edit IDs by
+hand. `--keep-edit-on-failure` skips that auto-discard for debugging.
+
+**Explicit (`gplay edits …`, when several changes must land together).** To
+batch multiple writes into **one atomic commit**, open an Edit yourself:
+
+```bash
+gplay edits begin            # opens an Edit, pins its id to .gplay/edit-<package>.json
+gplay metadata apply …       # these writes detect the pin and reuse the open Edit
+gplay releases upload … --release-notes-dir ./notes
+gplay edits status           # local read (no auth/network): shows the open edit, or none
+gplay edits commit           # publish everything at once, and clear the pin
+# gplay edits discard        # …or abandon the whole batch, clearing the pin
+```
+
+While the pin exists, subsequent write commands reuse the open Edit instead of
+opening their own, so the changes commit together or not at all. In explicit
+mode there is **no** auto-commit and **no** auto-discard — the lifecycle is
+yours until you `commit` or `discard`. Notes: a project (`gplay init`) is
+required since the pin lives under `.gplay/`; opening a second Edit while one is
+pinned is refused (**exit 60**); if `commit` fails (e.g. a validation error) the
+Edit stays open and the pin remains — fix and re-run, or `discard`.
+
+(A few surfaces sit *outside* the Edit model on purpose — `compliance
+datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games` are direct
+writes/reads with no `editId`, so `edits begin` does not batch them; their
+skills call that out.)
 
 ## Map of skills
 
@@ -156,3 +181,9 @@ e.g. `compliance datasafety` is a direct write — their skills call that out.)
 | Store listings + images | `gplay-metadata-sync` |
 | Data Safety | `gplay-compliance` |
 | Team users + grants | `gplay-team` |
+| Managed Play private apps | `gplay-customapps` |
+| Post-launch vitals (crashes/ANRs) | `gplay-vitals` |
+| Orders (view/refund) | `gplay-orders` |
+| Play Games config (achievements/leaderboards) | `gplay-games` |
+| App recovery (bad-release remediation) | `gplay-recovery` |
+| Device tier configs | `gplay-device-tiers` |
