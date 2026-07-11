@@ -1,6 +1,6 @@
 ---
 name: gplay-release-flow
-description: Ship Android releases through Google Play with the gplay CLI — upload an AAB to a track, promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), inspect what is live on a track, and list or download the signed APKs Play generates from an uploaded AAB. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, checking which releases sit on a track, or fetching the exact split/standalone/universal artifacts Play serves.
+description: Ship Android releases through Google Play with the gplay CLI — upload an AAB (or a legacy APK) to a track, promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), inspect what is live on a track, and list or download the signed APKs Play generates from an uploaded AAB. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, checking which releases sit on a track, or fetching the exact split/standalone/universal artifacts Play serves.
 ---
 
 # gplay release flow
@@ -72,6 +72,15 @@ closed tracks "just work" — **as long as the track already exists** (see
 *Track must exist first* below). Attach notes with `--release-notes` or a
 `--release-notes-dir` of `<locale>.txt` files. Run
 `gplay releases upload --help` for the full set.
+
+`upload` also accepts a **legacy `.apk`** (`[experimental]`, via
+`edits.apks.upload`): AAB vs APK is auto-detected by extension, and
+`--format apk|bundle` overrides when the extension is ambiguous. The rest of
+the pipeline (track, notes, `--mapping`, draft-by-default on production,
+`--dry-run`/`--confirm`) is identical. Google has required the AAB for new
+apps since August 2021, so APK uploads only serve existing apps still
+distributed as APKs — if the app requires an App Bundle, Google's rejection
+passes through verbatim.
 
 ## Promote a build up the ladder (no re-upload)
 

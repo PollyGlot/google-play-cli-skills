@@ -21,7 +21,7 @@ reads that local registry, not Play.
 ```bash
 gplay apps add com.example.app     # register (validates access via the API)
 gplay apps list                    # list packages in the local registry
-gplay apps view --package com.example.app   # default language, title, contact email
+gplay apps view --package com.example.app   # default language, title, contact email, icon
 gplay apps remove com.example.app  # drop from the registry (does not touch Play)
 gplay init                         # pin a package to ./.gplay for this repo
 ```
@@ -33,6 +33,13 @@ instead of weeks later in a CI release. Pass `--no-verify` to skip the API
 round-trip and record the package unconditionally (offline or preparatory
 registration). `gplay apps init` scaffolds the `.gplay/` pin (same idea as the
 top-level `gplay init`).
+
+`apps view` also reports the **store icon** when the default language has one
+(`[experimental]`): the icon's content **sha256** in table/markdown, and an
+`"icon"` key `{"url":..,"sha256":..}` in the JSON envelope (omitted when the
+slot is empty). The sha256 is the durable content-identity handle; the `url`
+is an **ephemeral preview link — never persist it** (fetch the bytes with
+`gplay metadata images pull`). Each run is a live read; nothing is cached.
 
 ## App details (read + write)
 
