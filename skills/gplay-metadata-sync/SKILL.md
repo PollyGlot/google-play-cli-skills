@@ -60,6 +60,7 @@ discards the Edit (nothing published).
 
 ```bash
 gplay metadata images list --package com.example.app
+gplay metadata images list --type icon         # one image type, all locales
 gplay metadata images pull --dir ./metadata
 gplay metadata images validate --dir ./metadata
 gplay metadata images apply --dir ./metadata --dry-run
@@ -69,3 +70,12 @@ gplay metadata images apply --dir ./metadata --dry-run
 per-locale icon, feature graphic, and screenshots, reconciling image **slots**
 (ADR-0013). Same discipline: validate offline, `--dry-run` before a real
 apply. Confirm flags with `gplay metadata images <command> --help`.
+
+`images list` walks the 9 image types across every locale that has a Listing
+(the API has no list-by-locale endpoint). `--type <AppImageType>`
+(`[experimental]`) narrows the read to a single type across all locales —
+one of `icon`, `featureGraphic`, `tvBanner`, `promoGraphic`,
+`phoneScreenshots`, `sevenInchScreenshots`, `tenInchScreenshots`,
+`tvScreenshots`, `wearScreenshots`; an unknown value is refused client-side
+(exit `20`) before any API call. `--output json` keeps its exact shape —
+`--type` only narrows which slots appear.
