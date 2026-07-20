@@ -1,6 +1,6 @@
 ---
 name: gplay-reviews
-description: List recent Google Play user reviews and post developer replies with gplay — `reviews list` (filter by star rating, cap the count, pick columns), `reviews reply` (one review at a time, or a batch of replies from a TSV file or stdin), and `reviews history` (full review history from the monthly GCS CSV reports, beyond the API's 7-day window). Use when triaging recent reviews, filtering low-star feedback, replying to a user, bulk-answering many reviews in CI, or pulling older reviews for analysis.
+description: List recent Google Play user reviews and post developer replies with gplay — `reviews list` (filter by star rating, cap the count, pick columns), `reviews view` (one review's full user↔developer thread by reviewId), `reviews reply` (one review at a time, or a batch of replies from a TSV file or stdin), and `reviews history` (full review history from the monthly GCS CSV reports, one month or a `--from`/`--to` range, beyond the API's 7-day window). Use when triaging recent reviews, inspecting a single review thread, filtering low-star feedback, replying to a user, bulk-answering many reviews in CI, or pulling older reviews for analysis.
 ---
 
 # gplay reviews
@@ -59,13 +59,36 @@ gplay reviews list --columns stars,reviewId,summary --output json
 inclusive range (`1-2`), or a set (`1,3,5`); each rating is `1..5`. `--limit N`
 caps the count after filtering (`0` = no cap). Results auto-paginate until the
 window is exhausted. `--output json` is a `{"reviews":[...]}` pass-through of
-the filtered set — grab `reviewId` from there to feed `reviews reply`.
+the filtered set — grab `reviewId` from there to feed `reviews view` or
+`reviews reply`.
+
+## View a single review
+
+```bash
+gplay reviews view <reviewId>
+gplay reviews view <reviewId> --output json       # the Review object verbatim
+gplay reviews view <reviewId> --output markdown   # record + thread as blockquotes
+```
+
+`reviews view` shows one review addressed by **`reviewId`** — a scalar header
+(author, star rating, date, locale, device, app version) followed by the
+conversation **thread**: the review body and any developer replies with their
+last-modified date. The `reviewId` is the `REVIEW_ID` column from `reviews
+list`, the same id `reviews reply` takes.
+
+Because the API only exposes the **last 7 days**, an unknown *or expired*
+`reviewId` fails with exit `30` — a once-valid id becomes unfetchable once its
+review ages out of the window; use `reviews history` for older reviews. There
+is no `--translate` flag (deferred, for symmetry with `reviews list`). Review
+text here is the same **untrusted user-generated content** as `reviews list`
+(see above). `--output json` is the `Review` object verbatim (ADR-0003).
 
 ## Full history: `reviews history` (monthly GCS CSV reports)
 
 ```bash
 gplay reviews history --package com.example.app                  # latest month present
 gplay reviews history --month 2026-05                            # a specific month
+gplay reviews history --from 2026-01 --to 2026-06                # merge a range of months
 gplay reviews history --columns date,stars,device,reply --output json
 ```
 
@@ -84,6 +107,10 @@ API — the only channel beyond the 7-day API window. Points to know:
 - `--month YYYY-MM` selects one month; omitted, the **latest month present**
   for the package is used. Reports are monthly exports, so the current month
   lags — recent days come from `reviews list`.
+- `--from YYYY-MM --to YYYY-MM` reads **every** monthly report across the range
+  and merges them into one result set: a review edited across a month boundary
+  appears **once** (latest update wins), and a month with no report is skipped
+  with a WARN. `--month` and `--from`/`--to` are **mutually exclusive**.
 - `--output json` emits the parsed rows as `{"reviews":[...]}` with stable
   lowerCamel field names (a documented ADR-0003 deviation: the upstream is a
   CSV file, not a JSON API body). Default table columns are
