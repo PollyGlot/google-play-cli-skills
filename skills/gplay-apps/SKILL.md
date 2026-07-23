@@ -1,6 +1,6 @@
 ---
 name: gplay-apps
-description: Manage the apps gplay knows about and their app-level details — register a package in gplay's local registry with `apps add` (which validates access against the Play API), list/view/remove registered apps, pin one to the repo with `apps init`, and read or patch app details (default language, contact email/phone/website) with `apps details view` / `apps details set`. Use when onboarding a new package into gplay, checking which apps are registered, or editing an app's default language or contact info.
+description: Manage the apps gplay knows about and their app-level details — register one or more packages in gplay's local registry with `apps add` (which validates access against the Play API), discover which apps a credential can actually reach with `apps accessible list` (server-authoritative), list/view/remove registered apps, pin one to the repo with `apps init`, and read or patch app details (default language, contact email/phone/website) with `apps details view` / `apps details set`. Use when onboarding a new package into gplay, discovering accessible apps, checking which apps are registered, or editing an app's default language or contact info.
 ---
 
 # gplay apps (registry + app details)
@@ -9,28 +9,51 @@ Two jobs: gplay's **local registry** of packages, and an app's **App details**
 record. Shared conventions (auth, `--package`, output, exit codes) live in
 `gplay-cli-usage`.
 
-## Why a local registry
+## Local registry vs. server-side discovery
 
-The Google Play Developer API has **no `apps.list` endpoint** — there is no way
-to ask Play "which apps do I own?". gplay works around this by keeping a local
-registry of packages you have registered under the active Account. `apps list`
-reads that local registry, not Play.
+Two different questions, two commands:
+
+- **"What have I chosen to work on?"** → `apps list` reads gplay's **local
+  registry**: the packages you have `apps add`-ed under the active Account. The
+  classic Android Publisher API has no `apps.list` endpoint, so this working set
+  is gplay's own record, not a Play read.
+- **"What can this credential actually reach?"** → `apps accessible list` is a
+  **server-authoritative** inventory, straight from Google via the Play
+  Developer Reporting `apps.search` method (least-privilege reporting scope, no
+  local-registry fallback).
+
+The two sets do **not** necessarily coincide (ADR-0039): a credential may be
+able to `apps add` a package it cannot see here, or see org apps it does not
+drive. Use `apps accessible list` to **bootstrap** — discover package names,
+then `apps add` the ones you want to work on.
+
+Pagination is one page per call: `--page-size` / `--page-token`, and
+`--output json` passes the `SearchAccessibleAppsResponse` through verbatim
+(`nextPageToken` included, ADR-0003); table/markdown output notes the next
+`--page-token` on stderr when more apps are available.
 
 ## Registering and managing packages
 
 ```bash
-gplay apps add com.example.app     # register (validates access via the API)
-gplay apps list                    # list packages in the local registry
+gplay apps accessible list             # server-side: apps this credential can reach
+gplay apps add com.example.app         # register one (validates access via the API)
+gplay apps add com.a com.b com.c       # register several — independent, partial success
+gplay apps list                        # list packages in the local registry
 gplay apps view --package com.example.app   # default language, title, contact email, icon
-gplay apps remove com.example.app  # drop from the registry (does not touch Play)
-gplay init                         # pin a package to ./.gplay for this repo
+gplay apps remove com.example.app      # drop from the registry (does not touch Play)
+gplay init                             # pin a package to ./.gplay for this repo
 ```
 
-`apps add` **validates by default** (ADR-0006): it opens and immediately
-discards a Play Edit on the package — a cheap probe that catches a typo'd
-package name or a missing per-app permission grant *now*, at registration,
-instead of weeks later in a CI release. Pass `--no-verify` to skip the API
-round-trip and record the package unconditionally (offline or preparatory
+`apps add` takes **one or more** packages and **validates by default**
+(ADR-0006): for each it opens and immediately discards a Play Edit — a cheap
+probe that catches a typo'd package name or a missing per-app permission grant
+*now*, at registration, instead of weeks later in a CI release. Multiple
+packages are **independent units of work**: a failure on one does not stop or
+roll back the others (partial success), each gets a ✓/✗ line on stderr, and the
+exit code reflects the most serious failure (a batch carrying any non-retryable
+failure exits non-retryable, so an automated caller won't blindly retry it).
+Duplicate arguments are collapsed. Pass `--no-verify` to skip the API
+round-trip and record every package unconditionally (offline or preparatory
 registration). `gplay apps init` scaffolds the `.gplay/` pin (same idea as the
 top-level `gplay init`).
 
