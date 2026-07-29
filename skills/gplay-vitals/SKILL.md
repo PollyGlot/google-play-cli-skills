@@ -1,6 +1,6 @@
 ---
 name: gplay-vitals
-description: Read an app's post-launch quality signals with gplay `vitals` — crash rate, ANR rate, slow start/rendering, excessive wakeups, low-memory kills, stuck wakelocks, plus error reports (counts/issues/reports) and Play-detected anomalies. Backed by the Play Developer Reporting service (a distinct Google service from the Android Publisher API, with its own OAuth scope), so it is entirely READ-ONLY — nothing under `vitals` mutates Play state. Use when checking crash/ANR health after a rollout, investigating a spike, pulling vitals into a CI gate, or reading clustered crash issues and stack traces.
+description: Read post-launch quality signals with gplay `vitals` — crash/ANR and other rates, error reports, Play-detected anomalies; entirely read-only, on a distinct reporting scope. Use when checking crash/ANR health after a rollout, investigating a spike, pulling vitals into a CI gate, or reading clustered crash issues and stack traces.
 ---
 
 # gplay vitals (post-launch quality signals)

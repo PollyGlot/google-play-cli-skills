@@ -1,6 +1,6 @@
 ---
 name: gplay-metadata-sync
-description: Sync a Google Play store listing — per-locale title/description/video text and per-locale images (icon, feature graphic, screenshots) — between a local on-disk tree and Play, using gplay's pull → edit → validate → apply model. Covers `metadata list/pull/validate/apply` and `metadata images list/pull/validate/apply`. Use when editing store listings or screenshots, migrating listing text into version control, localizing a listing, or gating a listing change in CI before it goes live.
+description: Sync a Google Play store listing — per-locale text and images — between an on-disk tree and Play with `gplay metadata`. Use when editing store listings or screenshots, migrating listing text into version control, localizing a listing, or gating a listing change in CI before it goes live.
 ---
 
 # gplay metadata sync (listings + images)

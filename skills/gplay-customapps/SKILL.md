@@ -1,6 +1,6 @@
 ---
 name: gplay-customapps
-description: Create a managed Google Play private app with gplay — `customapps create` uploads an AAB/APK on the developer-account axis via the one Play Developer API path that creates an app record (public apps are Console-only). Creation is irreversible (the API has no delete and no read), so it is gated behind `--confirm` and requires the account enrolled in managed Google Play with the account-level `CAN_CREATE_MANAGED_PLAY_APPS` capability. Use when creating a private, organisation-scoped enterprise app for managed Google Play distribution.
+description: Create a managed Google Play private app with `customapps create` — the one API path that creates an app record, irreversible and `--confirm`-gated. Use when creating a private, organisation-scoped enterprise app for managed Google Play distribution.
 ---
 
 # gplay customapps (managed Google Play private apps)

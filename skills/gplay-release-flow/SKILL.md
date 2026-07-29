@@ -1,6 +1,6 @@
 ---
 name: gplay-release-flow
-description: Ship Android releases through Google Play with the gplay CLI — upload an AAB (or a legacy APK) to a track (large artifacts upload resumably), promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), inspect what is live on a track, list or download the signed APKs Play generates from an uploaded AAB, attach ProGuard/R8 deobfuscation mappings for vitals symbolication, push a private Internal App Sharing build, and manage legacy OBB expansion files. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, checking which releases sit on a track, fetching the exact split/standalone/universal artifacts Play serves, symbolicating vitals crash stacks, sharing a QA build link, or working with OBB files.
+description: Ship Android releases through Google Play with `gplay releases`. Use when uploading an AAB or legacy APK to a track, promoting a build up the internal → alpha → beta → production ladder, steering a staged rollout (rollout / halt / resume / complete), inspecting a track's releases, downloading the signed APKs Play generates, attaching ProGuard/R8 mappings for vitals symbolication, sharing a private Internal App Sharing build, or managing legacy OBB expansion files.
 ---
 
 # gplay release flow

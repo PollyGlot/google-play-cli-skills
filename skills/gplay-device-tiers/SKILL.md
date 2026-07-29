@@ -1,6 +1,6 @@
 ---
 name: gplay-device-tiers
-description: Manage device tier configs with gplay `device-tiers` — the device-targeting configuration for tiered content delivery (device groups by RAM/SoC/system features, an ordered tier set, and user country sets). `create` uploads a JSON body (the server assigns the id), `view` reads one by id, `list` shows them newest-first. Configs are immutable — the API has create/get/list only, no update or delete — so `create` needs no `--confirm` (it can never overwrite). Use when defining or inspecting device tiers for tiered asset delivery, or scripting a config into CI.
+description: Manage device tier configs with gplay `device-tiers` — immutable device-targeting for tiered content delivery (create/view/list only, no update or delete). Use when defining or inspecting device tiers for tiered asset delivery, or scripting a config into CI.
 ---
 
 # gplay device-tiers (device-targeting for tiered delivery)

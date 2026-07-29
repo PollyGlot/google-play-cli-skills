@@ -1,6 +1,6 @@
 ---
 name: gplay-recovery
-description: Drive Google Play app recovery actions with gplay `recovery` — the incident-response remediation that force-updates users stuck on a bad release back to a safe version via a remote in-app update. `create` stages a harmless draft; `deploy` activates it (production-impacting); `cancel` stops it (irreversible); `add-targeting` widens the audience (append-only); `list` shows a versionCode's recoveries. Keyed by package + versionCode, outside the Edit model. Use when a shipped build is broken and you need to push affected users off it, or to inspect/steer an existing recovery.
+description: Drive Google Play app recovery actions with gplay `recovery` — the incident-response remediation that force-updates users stuck on a bad release to a safe version. Use when a shipped build is broken and you need to push affected users off it, or to inspect and steer an existing recovery (deploy, widen targeting, cancel).
 ---
 
 # gplay recovery (incident response for a bad release)

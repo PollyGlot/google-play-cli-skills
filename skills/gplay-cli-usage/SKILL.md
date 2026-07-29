@@ -1,6 +1,6 @@
 ---
 name: gplay-cli-usage
-description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the Edit lifecycle (implicit per-command, or explicit `edits begin/commit/discard` transactions). Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, introspecting the Android Publisher API surface offline with `gplay schema`, or building a more specific gplay workflow on top of these rules.
+description: The cross-cutting conventions every gplay command shares — credential and package resolution, output formats, semantic exit codes, the `--dry-run`/`--confirm` safety gates, and the Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, or introspecting the Android Publisher API offline with `gplay schema`.
 ---
 
 # gplay CLI conventions (foundation)

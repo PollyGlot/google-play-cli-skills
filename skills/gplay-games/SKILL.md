@@ -1,6 +1,6 @@
 ---
 name: gplay-games
-description: Configure a game's Play Games Services resources with gplay `games` — achievement and leaderboard configurations, each with list/view/create/update/delete. Backed by the gamesConfiguration API and addressed by the numeric Play Games application ID (`--application-id`), a distinct ID space from the Android package. Writes the editable draft only; there is no publish method (publishing to players is Console-only), and `delete` is `--confirm`-gated. Use when creating or editing achievements/leaderboards for a game, scripting their config in CI, or exporting/round-tripping a configuration as JSON.
+description: Configure a game's Play Games Services achievements and leaderboards with gplay `games`, keyed by the numeric `--application-id`; writes touch the draft only (publishing to players is Console-only). Use when creating or editing achievements or leaderboards, scripting their config in CI, or round-tripping a configuration as JSON.
 ---
 
 # gplay games (Play Games Services configuration)

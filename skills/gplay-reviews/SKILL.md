@@ -1,6 +1,6 @@
 ---
 name: gplay-reviews
-description: List recent Google Play user reviews and post developer replies with gplay — `reviews list` (filter by star rating, cap the count, pick columns), `reviews view` (one review's full user↔developer thread by reviewId), `reviews reply` (one review at a time, or a batch of replies from a TSV file or stdin), and `reviews history` (full review history from the monthly GCS CSV reports, one month or a `--from`/`--to` range, beyond the API's 7-day window). Use when triaging recent reviews, inspecting a single review thread, filtering low-star feedback, replying to a user, bulk-answering many reviews in CI, or pulling older reviews for analysis.
+description: Read and reply to Google Play user reviews with `gplay reviews`. Use when triaging recent reviews (the API's 7-day window), viewing one review's user↔developer thread, replying to a user singly or in batch from a TSV, or pulling older reviews from the monthly GCS CSV reports with `reviews history`.
 ---
 
 # gplay reviews

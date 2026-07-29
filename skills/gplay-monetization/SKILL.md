@@ -1,6 +1,6 @@
 ---
 name: gplay-monetization
-description: Manage an app's monetization catalog as files with gplay `subscriptions` and `iap` — subscriptions (base plans, per-territory prices, offers, lifecycle state) and one-time products (v2 `onetimeproducts` ∪ legacy `inappproducts`), reconciled `pull` → edit → `apply --dry-run` → `apply`. Unlike `metadata`, the catalog directory is a **mirror** — a live product with no file is a delete. `subscriptions prices convert` derives regional prices; `subscriptions prices migrate` is the only command that reprices existing subscribers. Use when putting subscriptions or IAP under version control, editing prices/offers/listings for a product, reviewing catalog drift in CI, promoting a legacy in-app product to the v2 model, or migrating live subscribers to a new price.
+description: Manage the monetization catalog — subscriptions and one-time products — as files with gplay `subscriptions` and `iap`; the directory is a mirror, so a live product with no file is a delete. Use when putting subscriptions or IAP under version control, editing a product's prices/offers/listings, reviewing catalog drift in CI, promoting a legacy in-app product to the v2 model, or migrating live subscribers to a new price.
 ---
 
 # gplay monetization (subscriptions + one-time products)

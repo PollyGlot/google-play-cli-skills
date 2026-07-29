@@ -1,6 +1,6 @@
 ---
 name: gplay-apps
-description: Manage the apps gplay knows about and their app-level details — register one or more packages in gplay's local registry with `apps add` (which validates access against the Play API), discover which apps a credential can actually reach with `apps accessible list` (server-authoritative), list/view/remove registered apps, pin one to the repo with `apps init`, and read or patch app details (default language, contact email/phone/website) with `apps details view` / `apps details set`. Use when onboarding a new package into gplay, discovering accessible apps, checking which apps are registered, or editing an app's default language or contact info.
+description: Manage gplay's local app registry and app-level details. Use when onboarding packages into gplay, discovering which apps a credential can reach (`apps accessible list`), listing or removing registered apps, pinning a package to the repo, or reading/patching app details (default language, contact info).
 ---
 
 # gplay apps (registry + app details)

@@ -1,6 +1,6 @@
 ---
 name: gplay-compliance
-description: Push and validate an app's Google Play Data Safety declaration with gplay — `compliance datasafety validate` (offline structural check of the canonical CSV) and `compliance datasafety set` (POST the declaration live). Use when updating the Data Safety form from a versioned CSV or gating it in CI. Note this is the ONLY Play compliance surface with an API — content rating, target audience, and ads/news declarations have no endpoint and stay manual in the Play Console.
+description: Push and validate the app's Google Play Data Safety declaration from a versioned CSV — the only Play compliance surface with an API (content rating and the other declarations stay Console-manual). Use when updating the Data Safety form or gating it in CI.
 ---
 
 # gplay compliance (Data Safety)
