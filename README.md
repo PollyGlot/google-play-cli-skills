@@ -36,6 +36,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-tracks`](skills/gplay-tracks/SKILL.md) | Inspecting tracks, creating a closed-testing track before an upload, auditing country availability (read-only), or setting the Google Groups authorized to test a closed track. |
 | [`gplay-reviews`](skills/gplay-reviews/SKILL.md) | Triaging recent reviews, filtering by star rating, viewing one review's full user↔developer thread, replying to a user, or bulk-answering reviews from a TSV in CI (the API exposes the last 7 days), or reading the full review history from the monthly GCS CSV reports (one month or a `--from`/`--to` range) with `reviews history`. |
 | [`gplay-metadata-sync`](skills/gplay-metadata-sync/SKILL.md) | Editing store listings or screenshots, migrating listing text into version control, localizing a listing, or gating a listing change in CI before it goes live. |
+| [`gplay-monetization`](skills/gplay-monetization/SKILL.md) | Putting subscriptions or one-time products under version control, editing a product's prices / offers / listings, reviewing catalog drift in CI, promoting a legacy `inappproducts` item to the v2 model, or migrating live subscribers to a new price. Declarative `pull` → edit → `apply`, but **mirror** semantics (a live product with no file is a delete) — not the additive stance of `metadata`. |
 | [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
 | [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
 | [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a managed Google Play private (organisation-scoped) app from an AAB/APK — the one Play API path that creates an app record. Irreversible, so `--confirm`-gated and capability-gated. |
@@ -53,10 +54,13 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 ## Roadmap
 
 The v1 set above tracks the current `gplay` GA surface. Skills for gated
-surfaces land as those CLI surfaces ship:
+surfaces land as those CLI surfaces ship.
 
-- **gplay-subscription-management** — subscriptions & IAP (+ RevenueCat) —
-  gated on [`#51`](https://github.com/PollyGlot/google-play-cli/issues/51).
+Subscriptions & IAP — the last open roadmap item, gated on
+[`#51`](https://github.com/PollyGlot/google-play-cli/issues/51) — shipped in
+gplay **v0.18.0** and is now covered by
+[`gplay-monetization`](skills/gplay-monetization/SKILL.md). RevenueCat
+reconciliation is not part of it: gplay wraps the Play side only.
 
 See the CLI's [`docs/BACKLOG.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/BACKLOG.md)
 for the full roster and gating.
