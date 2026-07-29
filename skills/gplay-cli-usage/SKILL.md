@@ -8,7 +8,8 @@ description: The cross-cutting conventions every gplay command shares — creden
 This is the **foundation skill**: the conventions that hold for *every* gplay
 command, factored out once so the workflow skills (`gplay-release-flow`,
 `gplay-setup`, `gplay-apps`, `gplay-tracks`, `gplay-reviews`,
-`gplay-metadata-sync`, `gplay-compliance`, `gplay-team`) can reference it
+`gplay-metadata-sync`, `gplay-monetization`, `gplay-compliance`,
+`gplay-team`) can reference it
 instead of repeating them. The normative source of truth is
 [`docs/DESIGN.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/DESIGN.md)
 in the CLI repo; this skill summarizes it for agents and does **not** freeze
@@ -165,9 +166,9 @@ pinned is refused (**exit 60**); if `commit` fails (e.g. a validation error) the
 Edit stays open and the pin remains — fix and re-run, or `discard`.
 
 (A few surfaces sit *outside* the Edit model on purpose — `compliance
-datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games` are direct
-writes/reads with no `editId`, so `edits begin` does not batch them; their
-skills call that out.)
+datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,
+`subscriptions`, `iap` are direct writes/reads with no `editId`, so
+`edits begin` does not batch them; their skills call that out.)
 
 ## Map of skills
 
@@ -187,3 +188,4 @@ skills call that out.)
 | Play Games config (achievements/leaderboards) | `gplay-games` |
 | App recovery (bad-release remediation) | `gplay-recovery` |
 | Device tier configs | `gplay-device-tiers` |
+| Subscriptions + one-time products (catalog) | `gplay-monetization` |
