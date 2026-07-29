@@ -18,8 +18,7 @@ gplay tracks view --track production                 # one track's full state
 ```
 
 `tracks view` answers "is anything wrong on this track right now?" — the latest
-release, its status, and rollout fraction. (Post-ADR-0019 this read is `view`,
-not the old `status`.)
+release, its status, and rollout fraction.
 
 ## Create a closed track
 

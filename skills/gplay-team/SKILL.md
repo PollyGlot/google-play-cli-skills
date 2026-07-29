@@ -58,8 +58,7 @@ gplay team grants remove alice@example.com --package com.example.app
 `grants set` is an **upsert** scoped to one app: gplay reads the member's
 current grants, then creates the grant if absent or updates it if present.
 `grants remove` removes access to one app while **keeping** the membership.
-(Post-ADR-0019 the delete verb is `remove`, **not** `revoke`.) Admin-conferring
-grants likewise require `--grant-admin` (exit `3` if missing).
+Admin-conferring grants likewise require `--grant-admin` (exit `3` if missing).
 
 ## Agent-resolvable safety gates
 

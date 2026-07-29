@@ -84,8 +84,8 @@ emit an empty patch. There is no `--confirm` (contact info is low-stakes and
 reversible); use `--dry-run` to preview the patch with no HTTP call. Confirm
 the field flags with `gplay apps details set --help`.
 
-> The bare `gplay apps details` command prints help — it groups `view` + `set`,
-> it is not itself a read (post-ADR-0019: no verb-less reads).
+> The bare `gplay apps details` command prints help; the read is
+> `apps details view`.
 
 ## Next steps
 

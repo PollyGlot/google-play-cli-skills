@@ -60,22 +60,35 @@ discards the Edit (nothing published).
 
 ```bash
 gplay metadata images list --package com.example.app
-gplay metadata images list --type icon         # one image type, all locales
+gplay metadata images list --type icon                    # one image type, all locales
 gplay metadata images pull --dir ./metadata
-gplay metadata images validate --dir ./metadata
-gplay metadata images apply --dir ./metadata --dry-run
+gplay metadata images validate --dir ./metadata           # offline lint, exit 20 on error
+gplay metadata images apply --dir ./metadata --dry-run    # ONLINE per-slot delta
+gplay metadata images apply --dir ./metadata --confirm    # publishes — live immediately
 ```
 
 `metadata images` mirrors the same `list/pull/validate/apply` verbs for
-per-locale icon, feature graphic, and screenshots, reconciling image **slots**
-(ADR-0013). Same discipline: validate offline, `--dry-run` before a real
-apply. Confirm flags with `gplay metadata images <command> --help`.
+per-locale image **slots** (ADR-0013), with the same discipline — validate
+offline, `--dry-run`, then `apply --confirm` (atomic: all slots reconcile in
+one Edit; any per-slot failure discards it, nothing published).
 
-`images list` walks the 9 image types across every locale that has a Listing
-(the API has no list-by-locale endpoint). `--type <AppImageType>`
-(`[experimental]`) narrows the read to a single type across all locales —
-one of `icon`, `featureGraphic`, `tvBanner`, `promoGraphic`,
-`phoneScreenshots`, `sevenInchScreenshots`, `tenInchScreenshots`,
-`tvScreenshots`, `wearScreenshots`; an unknown value is refused client-side
-(exit `20`) before any API call. `--output json` keeps its exact shape —
-`--type` only narrows which slots appear.
+- **Slots.** The 9 image types are `icon`, `featureGraphic`, `tvBanner`,
+  `promoGraphic`, `phoneScreenshots`, `sevenInchScreenshots`,
+  `tenInchScreenshots`, `tvScreenshots`, `wearScreenshots`. `images list`
+  walks all 9 across every locale that has a Listing; `--type`
+  (`[experimental]`) narrows to one type (an unknown value is refused
+  client-side, exit `20`).
+- **`validate` limits** (versioned in-code table; Play's commit stays the
+  authority): exact dimensions — icon 512×512, feature graphic 1024×500, TV
+  banner 1280×720; screenshot sides 320–3840 px with 2:1 aspect ratio;
+  PNG/JPEG only (read from the bytes); ≤8 images per slot.
+  `apply --no-validate` bypasses this pre-check.
+- **Additive, like the text side.** `apply` uploads on-disk images and
+  reorders a gallery whose order changed; an online-only image in a managed
+  slot is left intact unless `--prune` (destructive, also `--confirm`-gated).
+  A slot absent or empty on disk is unmanaged and never touched.
+- **Scoped applies.** `--locale` and `--type` (both repeatable) restrict the
+  reconciliation to a subset of slots.
+- **CI gate.** `apply --dry-run --output json` is the diff schema
+  `{package, slots[], summary}` — one line:
+  `jq -e '.summary.upload + .summary.delete + .summary.reorder > 0'`.
