@@ -1,6 +1,6 @@
 ---
 name: gplay-setup
-description: Onboard gplay authentication from zero — point it at a Google Play service-account JSON (via GPLAY_SERVICE_ACCOUNT or --service-account), register it with `auth login`, verify the wiring with `auth status` / `auth doctor`, and manage stored accounts with `auth list` / `auth logout`. Use when setting up gplay auth for the first time, switching or rotating service accounts, or diagnosing why an authenticated gplay command fails with an auth error (exit 10/11).
+description: Onboard gplay authentication from zero with the `auth` namespace. Use when setting up gplay auth for the first time, switching or rotating service accounts, managing stored accounts, or diagnosing why an authenticated gplay command fails with an auth error (exit 10/11).
 ---
 
 # gplay setup (auth onboarding)
@@ -43,9 +43,12 @@ not invited on the app/account (exit `11`).
 ## Managing stored accounts
 
 ```bash
-gplay auth list      # every registered Account
-gplay auth logout    # remove an Account from the config + keystore
+gplay auth list                     # every registered Account
+gplay auth logout <name> --confirm  # remove an Account from the config + keystore
 ```
+
+`auth logout` removes a stored credential, so it is `--confirm`-gated like
+every destructive write (missing → exit `3`, naming the flag).
 
 Use `--account <name>` on later commands to target a specific stored Account
 when you have more than one. Confirm the exact flags with

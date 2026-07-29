@@ -1,6 +1,6 @@
 ---
 name: gplay-team
-description: Manage a Google Play Developer account's members and their permissions with gplay — account-wide members (`team users add/list/remove/set`), per-app access grants (`team grants list/remove/set`), and the offline permission catalog (`team permissions`). Permissions are expressed as friendly role bundles or aliases, with a named safety gate for conferring admin. Use when inviting or off-boarding a member, granting or adjusting per-app access, or looking up which permission alias or role bundle to use.
+description: Manage a Google Play Developer account's members and their permissions with `gplay team`. Use when inviting or off-boarding a member, granting or adjusting per-app access, or looking up which permission alias or role bundle to use in the offline `team permissions` catalog.
 ---
 
 # gplay team (users + grants + permissions)
@@ -58,8 +58,7 @@ gplay team grants remove alice@example.com --package com.example.app
 `grants set` is an **upsert** scoped to one app: gplay reads the member's
 current grants, then creates the grant if absent or updates it if present.
 `grants remove` removes access to one app while **keeping** the membership.
-(Post-ADR-0019 the delete verb is `remove`, **not** `revoke`.) Admin-conferring
-grants likewise require `--grant-admin` (exit `3` if missing).
+Admin-conferring grants likewise require `--grant-admin` (exit `3` if missing).
 
 ## Agent-resolvable safety gates
 

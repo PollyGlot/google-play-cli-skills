@@ -1,6 +1,6 @@
 ---
 name: gplay-monetization
-description: Manage an app's monetization catalog as files with gplay `subscriptions` and `iap` — subscriptions (base plans, per-territory prices, offers, lifecycle state) and one-time products (v2 `onetimeproducts` ∪ legacy `inappproducts`), reconciled `pull` → edit → `apply --dry-run` → `apply`. Unlike `metadata`, the catalog directory is a **mirror** — a live product with no file is a delete. `subscriptions prices convert` derives regional prices; `subscriptions prices migrate` is the only command that reprices existing subscribers. Use when putting subscriptions or IAP under version control, editing prices/offers/listings for a product, reviewing catalog drift in CI, promoting a legacy in-app product to the v2 model, or migrating live subscribers to a new price.
+description: Manage the monetization catalog — subscriptions and one-time products — as files with gplay `subscriptions` and `iap`; the directory is a mirror, so a live product with no file is a delete. Use when putting subscriptions or IAP under version control, editing a product's prices/offers/listings, reviewing catalog drift in CI, promoting a legacy in-app product to the v2 model, or migrating live subscribers to a new price.
 ---
 
 # gplay monetization (subscriptions + one-time products)
@@ -142,37 +142,20 @@ gplay iap apply --dry-run
 gplay iap apply [--confirm] [--migrate]
 ```
 
-**Why the union matters.** Google auto-migrated one-time products to the v2
-model only for Console-only accounts. Any account that ever wrote through the
-`inappproducts` API keeps unmigrated products that are **invisible to the v2
-list** — and gplay's users are by definition API-managed. So `pull` reads both
-surfaces and unions them by product ID. A product live in both keeps the v2
-file; the legacy row is its pre-migration shadow.
-
-**A file's origin is its shape** — no gplay-invented marker:
+`pull` unions the v2 and legacy surfaces by product ID, and **a file's origin
+is its shape** — no gplay-invented marker:
 
 | Field present | Model |
 |---|---|
 | `sku` | legacy `inappproducts` |
 | `productId` | v2 `onetimeproducts` |
 
-**Legacy is inert.** gplay never creates, edits or deletes a legacy product.
-Each attempt is a distinct, self-explaining refusal:
-
-- declaring a legacy product that isn't live → usage error, declare it as v2
-- editing a legacy file in place → usage error, rewrite it as v2 and `--migrate`
-- omitting a legacy file → usage error, gplay won't delete legacy; restore the
-  file with `pull` or remove the product in the Console
-
-**Promotion is the only gesture, and it's one-way.** Rewrite the file in the
-v2 schema (`productId` instead of `sku`) and apply with `--migrate`. It shows
-as a distinct `migrate` op in the plan. Once promoted, a product can **never**
-return to `inappproducts` — rehearse with `--dry-run` first.
-
-Other notes: a v2 create is a `patch` with `allowMissing` (the API has no
-insert); offer writes ride the per-purchase-option batch endpoints; and
-purchase-option and offer lifecycle **states are not yet reconciled**
-(normalized out of the diff).
+**Legacy is inert**: gplay never creates, edits or deletes a legacy product —
+the only gesture is the **one-way promotion** to v2 (rewrite the file with
+`productId` and apply with `--migrate`; rehearse with `--dry-run` first).
+When a legacy file is involved — an unexpected refusal, a promotion to plan,
+or the question of why `pull` reads two surfaces — read
+[iap-legacy.md](iap-legacy.md).
 
 ## `--regions-version`
 

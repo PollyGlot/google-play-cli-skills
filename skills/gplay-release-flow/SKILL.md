@@ -1,6 +1,6 @@
 ---
 name: gplay-release-flow
-description: Ship Android releases through Google Play with the gplay CLI — upload an AAB (or a legacy APK) to a track (large artifacts upload resumably), promote a build up the track ladder without re-uploading, run and steer a staged production rollout (halt / resume / complete), inspect what is live on a track, list or download the signed APKs Play generates from an uploaded AAB, attach ProGuard/R8 deobfuscation mappings for vitals symbolication, push a private Internal App Sharing build, and manage legacy OBB expansion files. Use when uploading a build, cutting or shipping a release, promoting internal → alpha → beta → production, starting/ramping/pausing/finishing a staged rollout, checking which releases sit on a track, fetching the exact split/standalone/universal artifacts Play serves, symbolicating vitals crash stacks, sharing a QA build link, or working with OBB files.
+description: Ship Android releases through Google Play with `gplay releases`. Use when uploading an AAB or legacy APK to a track, promoting a build up the internal → alpha → beta → production ladder, steering a staged rollout (rollout / halt / resume / complete), inspecting a track's releases, downloading the signed APKs Play generates, attaching ProGuard/R8 mappings for vitals symbolication, sharing a private Internal App Sharing build, or managing legacy OBB expansion files.
 ---
 
 # gplay release flow
@@ -10,6 +10,13 @@ Drive the Google Play release lifecycle from the command line with `gplay`:
 **rollout** on production (and `halt` / `resume` / `complete` it), and **list**
 what is currently on a track. gplay hides Google's three-step Edit transaction
 (`edits.insert → change → edits.commit`) behind a single call per command.
+
+Shared conventions — auth setup (`gplay auth doctor`, see `gplay-setup`),
+`--package` pinning via `gplay init`, `--output json` for machines, and the
+semantic exit-code table — are in `gplay-cli-usage`. The codes that matter
+most here: `3` a required `--confirm` is missing (re-run with it), `30` an API
+4xx such as a missing track, `60` an ambiguous target (two releases coexist),
+`40`/`50` retry-safe (5xx / network).
 
 ## The `--help` is the source of truth
 
@@ -23,22 +30,6 @@ gplay releases <command> --help    # one command (upload, promote, rollout, …)
 ```
 
 If a flag you expect is absent, trust `--help`, not this document.
-
-## Before you run anything
-
-1. **Auth.** Every command needs a working service-account credential. If you
-   are not sure it is wired up, run `gplay auth doctor` (and see the
-   `gplay-setup` skill for onboarding). Auth failures exit `10` (bad
-   credential) or `11` (the service account is not invited on the app).
-2. **Which app.** Pin the package once with `gplay init` (writes
-   `.gplay/config.json`), or pass `--package com.example.app` on each call.
-3. **Output for machines.** In CI or when parsing, add `--output json`. On a
-   TTY the default is a human table; piped/non-TTY defaults to JSON already.
-4. **Branch on exit codes, not text.** gplay returns semantic exit codes
-   (`gplay exit-codes` prints the table). The ones that matter here:
-   `3` a required `--confirm` is missing, `30` an API 4xx such as a missing
-   track, `60` an ambiguous target (two releases coexist). `40`/`50` are
-   retry-safe (5xx / network).
 
 ## Mental model: the track ladder + the rollout state machine
 
@@ -143,64 +134,36 @@ list` / `gplay tracks view`).
 
 After an upload, Play **generates and signs** the APKs it actually serves to
 devices from your AAB — split, standalone, and universal APKs, plus asset-pack
-and recovery-module slices. The `generated` sub-surface lists their download
-metadata and fetches the raw signed bytes — handy to verify the signing
-identity, sideload, or archive the exact artifacts Play serves after a
-`releases upload`. Both commands are **`[experimental]`**; confirm flags with
-`gplay releases generated --help`.
+and recovery-module slices. The `generated` sub-surface (`[experimental]`)
+lists their download metadata and fetches the raw signed bytes — to verify the
+signing identity, sideload, or archive the exact artifacts Play serves.
 
 ```bash
 gplay releases generated list --version-code 42
-gplay releases generated list --version-code 42 --output json
 gplay releases generated download <downloadId> --version-code 42 --dest ./universal.apk
 gplay releases generated download <downloadId> --version-code 42 --dest -   # stream to stdout
 ```
 
-These reads are **Edit-free**: unlike `releases list`, the `generatedapks`
-endpoints are **application-scoped** (not under an Edit), so gplay issues a
-direct GET. Don't pattern-match `releases list` and wrap an Edit around them —
-the endpoints don't accept one. They are pure reads needing only that the
-service account is invited on the app: **no** Edit, **no** financial capability.
+Points to know:
 
-### `generated list` — enumerate the artifacts (keyed by `--version-code`)
-
-`--version-code N` is **required** — it addresses the uploaded bundle. The API
-groups the artifacts by signing key; gplay **flattens** that envelope into one
-row per artifact — *type · module · split/variant/slice id · downloadId · short
-cert hash* — so you can scan every generated artifact at once; narrow it with
-`--columns` (e.g. `--columns type,downloadId,cert`). `--output json` stays the
-verbatim `GeneratedApksListResponse` (ADR-0003), the signing-key groups intact,
-for machines.
-
-Read each artifact's **Download ID** (the `downloadId` field) from this list —
-it is the opaque handle you hand to `download`. It is **not a URL** and **not
-stable** across re-generation, so always read a fresh one from `list` rather
-than caching it.
-
-### `generated download` — fetch one artifact's bytes to a file
-
-This is gplay's first **binary download-to-file** gesture (ADR-0034), so it has
-its own conventions, distinct from the structured reads above:
-
-- The **Download ID** is the **positional** argument (the addressed artifact);
-  `--version-code N` is still required to locate the bundle.
-- Destination is **`--dest PATH`** (required), **not `--output`** — the payload
-  is opaque bytes, not a renderable table, so this command does **not** expose
-  the global `--output json|table|markdown` flag. Use **`--dest -`** to stream
-  the bytes to stdout for piping.
-- Bytes are **streamed** to the file, never buffered whole (a universal APK can
-  be large). On success a **`✓`** line on **stderr** names the byte count and
-  destination; stdout stays the data path.
-- A **failed transfer leaves no file behind**: gplay removes the partial APK on
-  any transport or close error, so a non-zero exit never strands a truncated
-  artifact you might mistake for a good one.
-
-Exit codes: both commands return `11` (403 — the service account is not invited
-on the app), `30` (404 — unknown package/version code, none generated, or
-unknown Download ID), and `40`/`50` (retry-safe 5xx / network). `download` adds
-`20` when the `--dest` path can't be written (local IO). A missing
-`--version-code` / `--dest` / `<downloadId>` is usage (exit `2`), caught before
-any network call.
+- **Edit-free reads.** The `generatedapks` endpoints are application-scoped
+  (not under an Edit) — gplay issues a direct GET; don't pattern-match
+  `releases list` and expect an Edit. Only requires the service account to be
+  invited on the app.
+- **`--version-code N` is required on both** — it addresses the uploaded
+  bundle. `list` flattens the API's signing-key groups into one row per
+  artifact (*type · module · split/variant/slice id · downloadId · cert*);
+  `--output json` stays the verbatim `GeneratedApksListResponse` (ADR-0003).
+- The **Download ID** from `list` is the positional handle `download` takes.
+  It is **not a URL** and **not stable** across re-generation — read a fresh
+  one from `list`, never cache it.
+- `download` writes to **`--dest PATH`** (required; `-` streams to stdout) —
+  the payload is opaque bytes, so there is no `--output` here (ADR-0034).
+  Bytes are streamed, a `✓` line on stderr reports count and destination, and
+  a **failed transfer leaves no partial file behind**.
+- Exit codes: `11` (403 — not invited), `30` (404 — unknown
+  package/version/Download ID), `40`/`50` retry-safe; `download` adds `20`
+  when `--dest` can't be written. Missing required args are usage (exit `2`).
 
 ## Deobfuscation mappings (symbolicate vitals crash stacks)
 
@@ -243,25 +206,10 @@ and creates no release), but `GPLAY_READONLY=1` still refuses it (exit `4`).
 
 ## Legacy OBB expansion files
 
-**Legacy surface.** Expansion files are the pre-AAB mechanism for >150 MB
-out-of-APK assets, and only APK-based apps use them — most apps use **Play Asset
-Delivery** instead. The whole `expansion-files` namespace is `[experimental]`.
-
-```bash
-gplay releases expansion-files upload ./main.obb --version-code 42 --type main
-gplay releases expansion-files set --version-code 43 --references-version 42 --type main
-gplay releases expansion-files view --version-code 42 --type main
-```
-
-- `upload` attaches an `.obb` to an already-published APK `--version-code`
-  (`--type main|patch`, the two files an APK can have), via the full Edit
-  lifecycle.
-- `set` points one APK's expansion config at **another** APK's already-uploaded
-  file (`--references-version N`) — no new binary uploaded.
-- `view` reads an APK's expansion config (its own `fileSize`, or the
-  `referencesVersion` it points at) inside a read-only Edit.
-
-All three take `--dry-run` and are refused under `GPLAY_READONLY`.
+Only APK-based apps carry `.obb` expansion files (the pre-AAB mechanism for
+>150 MB assets; AAB apps use Play Asset Delivery). When the task touches OBB
+files, read [obb.md](obb.md) for the `expansion-files upload/set/view`
+commands.
 
 ## Production safety is built in
 

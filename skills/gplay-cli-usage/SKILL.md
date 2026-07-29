@@ -1,15 +1,13 @@
 ---
 name: gplay-cli-usage
-description: The cross-cutting conventions every gplay command shares — credential/account resolution order, package targeting and `.gplay/` pinning, output formats (table/json/markdown), semantic exit codes, the `--dry-run`/`--confirm` safety gates, stdout-is-data/stderr-is-logs, and the Edit lifecycle (implicit per-command, or explicit `edits begin/commit/discard` transactions). Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, introspecting the Android Publisher API surface offline with `gplay schema`, or building a more specific gplay workflow on top of these rules.
+description: The cross-cutting conventions every gplay command shares — credential and package resolution, output formats, semantic exit codes, the `--dry-run`/`--confirm` safety gates, and the Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, or introspecting the Android Publisher API offline with `gplay schema`.
 ---
 
 # gplay CLI conventions (foundation)
 
 This is the **foundation skill**: the conventions that hold for *every* gplay
-command, factored out once so the workflow skills (`gplay-release-flow`,
-`gplay-setup`, `gplay-apps`, `gplay-tracks`, `gplay-reviews`,
-`gplay-metadata-sync`, `gplay-monetization`, `gplay-compliance`,
-`gplay-team`) can reference it
+command, factored out once so the workflow skills (see the **Map of skills**
+table at the end) can reference it
 instead of repeating them. The normative source of truth is
 [`docs/DESIGN.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/DESIGN.md)
 in the CLI repo; this skill summarizes it for agents and does **not** freeze
@@ -117,8 +115,10 @@ retry blindly".
   prints the payload/diff it *would* send, with no HTTP call (and usually no
   auth needed). Reach for it before any production-affecting write.
 - **`--confirm`** gates the writes that reach real users or the live store —
-  production releases, `metadata apply`, `compliance datasafety set`. Omitting
-  it fails with exit `3` and names the flag. `CI=true` never auto-confirms.
+  production releases, `metadata apply`, `compliance datasafety set` — and
+  destructive local writes like `auth logout`. Omitting it fails with exit `3`
+  and names the flag (in the JSON error envelope: `requires: ["confirm"]`).
+  `CI=true` never auto-confirms.
 - **`--grant-admin`** is the stronger gate for conferring admin in
   `gplay-team`.
 - **`GPLAY_READONLY=1`** (truthy = enforced) is the environment-level guard for

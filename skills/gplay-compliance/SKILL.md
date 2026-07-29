@@ -1,6 +1,6 @@
 ---
 name: gplay-compliance
-description: Push and validate an app's Google Play Data Safety declaration with gplay — `compliance datasafety validate` (offline structural check of the canonical CSV) and `compliance datasafety set` (POST the declaration live). Use when updating the Data Safety form from a versioned CSV or gating it in CI. Note this is the ONLY Play compliance surface with an API — content rating, target audience, and ads/news declarations have no endpoint and stay manual in the Play Console.
+description: Push and validate the app's Google Play Data Safety declaration from a versioned CSV — the only Play compliance surface with an API (content rating and the other declarations stay Console-manual). Use when updating the Data Safety form or gating it in CI.
 ---
 
 # gplay compliance (Data Safety)
@@ -41,8 +41,10 @@ gplay compliance datasafety set --confirm                  # the real write — 
   validates, resolves the target package/Account, and reports "would POST N
   bytes / N rows" with no HTTP call (and no `--confirm` needed).
 - The real write **requires `--confirm`** (a stale or wrong declaration can
-  block releases or misstate your data practices); without it `set` refuses,
-  exits `2`, and points you at the flag. `CI=true` does not auto-confirm.
+  block releases or misstate your data practices); without it `set` refuses
+  with **exit `3`**, and the `--output json` error envelope names the flag in
+  `requires: ["confirm"]` — add it and re-run. `CI=true` does not
+  auto-confirm. (gplay 0.18.0 exited `2` here; fixed on main after.)
 
 `--output json` passes the API response through verbatim. Confirm flags with
 `gplay compliance datasafety set --help`.

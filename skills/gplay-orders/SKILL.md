@@ -1,6 +1,6 @@
 ---
 name: gplay-orders
-description: Look up and refund Google Play orders by order ID with gplay `orders` — the admin commerce surface. `orders view <orderId>...` reads one order (orders.get) or a batch (orders.batchget); `orders refund <orderId>` is a money-moving, irreversible write, so it is `--confirm`-gated. Reading needs the `CAN_VIEW_FINANCIAL_DATA` capability and refunding needs `CAN_MANAGE_ORDERS` — neither is part of a Role bundle. Use when a buyer complaint or payout report hands you an order ID and you need its state, or when issuing a refund. This is order-by-ID admin diagnostics, not runtime purchase-token verification.
+description: Look up and refund Google Play orders by order ID with gplay `orders` — admin diagnostics, not runtime purchase-token verification. Use when a buyer complaint or payout report hands you an order ID and you need its state, or when issuing a money-moving `--confirm`-gated refund.
 ---
 
 # gplay orders (admin commerce: view + refund)

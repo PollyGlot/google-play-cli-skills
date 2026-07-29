@@ -1,6 +1,6 @@
 ---
 name: gplay-tracks
-description: Inspect and manage Google Play release tracks and their testers with gplay — list tracks, view one track's full state, create custom closed-testing tracks, read a track's country availability (read-only), and replace the Google Groups authorized to test a closed track. Use when checking what's on a track, creating a closed track before an upload, auditing where an app is distributed, or wiring up the tester audience for a closed test.
+description: Inspect and manage Google Play release tracks and their testers. Use when checking what's on a track, creating a closed-testing track before an upload, auditing country availability (read-only), or setting the Google Groups authorized to test a closed track.
 ---
 
 # gplay tracks (+ availability + testers)
@@ -18,8 +18,7 @@ gplay tracks view --track production                 # one track's full state
 ```
 
 `tracks view` answers "is anything wrong on this track right now?" — the latest
-release, its status, and rollout fraction. (Post-ADR-0019 this read is `view`,
-not the old `status`.)
+release, its status, and rollout fraction.
 
 ## Create a closed track
 
