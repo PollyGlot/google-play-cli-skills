@@ -42,10 +42,9 @@ gplay compliance datasafety set --confirm                  # the real write — 
   bytes / N rows" with no HTTP call (and no `--confirm` needed).
 - The real write **requires `--confirm`** (a stale or wrong declaration can
   block releases or misstate your data practices); without it `set` refuses
-  and points you at the flag. **Known deviation:** as of gplay 0.18.0 this
-  refusal exits **`2`**, not the `3` the exit-code convention promises for a
-  missing safety flag — branch on `2` *or* `3` here until the CLI aligns.
-  `CI=true` does not auto-confirm.
+  with **exit `3`**, and the `--output json` error envelope names the flag in
+  `requires: ["confirm"]` — add it and re-run. `CI=true` does not
+  auto-confirm. (gplay 0.18.0 exited `2` here; fixed on main after.)
 
 `--output json` passes the API response through verbatim. Confirm flags with
 `gplay compliance datasafety set --help`.

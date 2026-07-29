@@ -115,8 +115,10 @@ retry blindly".
   prints the payload/diff it *would* send, with no HTTP call (and usually no
   auth needed). Reach for it before any production-affecting write.
 - **`--confirm`** gates the writes that reach real users or the live store —
-  production releases, `metadata apply`, `compliance datasafety set`. Omitting
-  it fails with exit `3` and names the flag. `CI=true` never auto-confirms.
+  production releases, `metadata apply`, `compliance datasafety set` — and
+  destructive local writes like `auth logout`. Omitting it fails with exit `3`
+  and names the flag (in the JSON error envelope: `requires: ["confirm"]`).
+  `CI=true` never auto-confirms.
 - **`--grant-admin`** is the stronger gate for conferring admin in
   `gplay-team`.
 - **`GPLAY_READONLY=1`** (truthy = enforced) is the environment-level guard for

@@ -43,9 +43,12 @@ not invited on the app/account (exit `11`).
 ## Managing stored accounts
 
 ```bash
-gplay auth list      # every registered Account
-gplay auth logout    # remove an Account from the config + keystore
+gplay auth list                     # every registered Account
+gplay auth logout <name> --confirm  # remove an Account from the config + keystore
 ```
+
+`auth logout` removes a stored credential, so it is `--confirm`-gated like
+every destructive write (missing → exit `3`, naming the flag).
 
 Use `--account <name>` on later commands to target a specific stored Account
 when you have more than one. Confirm the exact flags with
