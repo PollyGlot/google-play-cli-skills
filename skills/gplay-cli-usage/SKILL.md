@@ -6,10 +6,8 @@ description: The cross-cutting conventions every gplay command shares — creden
 # gplay CLI conventions (foundation)
 
 This is the **foundation skill**: the conventions that hold for *every* gplay
-command, factored out once so the workflow skills (`gplay-release-flow`,
-`gplay-setup`, `gplay-apps`, `gplay-tracks`, `gplay-reviews`,
-`gplay-metadata-sync`, `gplay-monetization`, `gplay-compliance`,
-`gplay-team`) can reference it
+command, factored out once so the workflow skills (see the **Map of skills**
+table at the end) can reference it
 instead of repeating them. The normative source of truth is
 [`docs/DESIGN.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/DESIGN.md)
 in the CLI repo; this skill summarizes it for agents and does **not** freeze
