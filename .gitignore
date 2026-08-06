@@ -2,3 +2,7 @@
 .DS_Store
 *.swp
 *~
+
+# Claude Code — local à la machine
+.claude/settings.local.json
+.claude/worktrees/
