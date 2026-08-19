@@ -24,7 +24,7 @@ Two different questions, two commands:
 
 The two sets do **not** necessarily coincide (ADR-0039): a credential may be
 able to `apps add` a package it cannot see here, or see org apps it does not
-drive. Use `apps accessible list` to **bootstrap** — discover package names,
+drive. Use `apps accessible list` to **bootstrap**: discover package names,
 then `apps add` the ones you want to work on.
 
 Pagination is one page per call: `--page-size` / `--page-token`, and
@@ -37,7 +37,7 @@ Pagination is one page per call: `--page-size` / `--page-token`, and
 ```bash
 gplay apps accessible list             # server-side: apps this credential can reach
 gplay apps add com.example.app         # register one (validates access via the API)
-gplay apps add com.a com.b com.c       # register several — independent, partial success
+gplay apps add com.a com.b com.c       # register several: independent, partial success
 gplay apps list                        # list packages in the local registry
 gplay apps view --package com.example.app   # default language, title, contact email, icon
 gplay apps remove com.example.app      # drop from the registry (does not touch Play)
@@ -45,7 +45,7 @@ gplay init                             # pin a package to ./.gplay for this repo
 ```
 
 `apps add` takes **one or more** packages and **validates by default**
-(ADR-0006): for each it opens and immediately discards a Play Edit — a cheap
+(ADR-0006): for each it opens and immediately discards a Play Edit, a cheap
 probe that catches a typo'd package name or a missing per-app permission grant
 *now*, at registration, instead of weeks later in a CI release. Multiple
 packages are **independent units of work**: a failure on one does not stop or
@@ -61,13 +61,13 @@ top-level `gplay init`).
 (`[experimental]`): the icon's content **sha256** in table/markdown, and an
 `"icon"` key `{"url":..,"sha256":..}` in the JSON envelope (omitted when the
 slot is empty). The sha256 is the durable content-identity handle; the `url`
-is an **ephemeral preview link — never persist it** (fetch the bytes with
+is an **ephemeral preview link; never persist it** (fetch the bytes with
 `gplay metadata images pull`). Each run is a live read; nothing is cached.
 
 ## App details (read + write)
 
 App details is the app-global record holding `defaultLanguage` and the
-user-visible `contactEmail`, `contactPhone`, and `contactWebsite` — writable
+user-visible `contactEmail`, `contactPhone`, and `contactWebsite`, writable
 via the API (ADR-0012):
 
 ```bash
@@ -81,14 +81,8 @@ pass is written, a field you omit is left intact, and an explicit empty value
 **clears** a field (e.g. `--contact-phone ""` removes the number). A bare
 `set` with no field flag is refused (exit `2`) so a forgotten flag can never
 emit an empty patch. There is no `--confirm` (contact info is low-stakes and
-reversible); use `--dry-run` to preview the patch with no HTTP call. Confirm
-the field flags with `gplay apps details set --help`.
+reversible); use `--dry-run` to preview the patch with no HTTP call.
 
 > The bare `gplay apps details` command prints help; the read is
 > `apps details view`.
 
-## Next steps
-
-With an app registered and pinned, move on to `gplay-release-flow` (ship a
-build), `gplay-tracks` (tracks + testers), or `gplay-metadata-sync` (store
-listing). Auth not set up yet? Start with `gplay-setup`.

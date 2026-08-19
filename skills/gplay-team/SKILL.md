@@ -1,6 +1,6 @@
 ---
 name: gplay-team
-description: Manage a Google Play Developer account's members and their permissions with `gplay team`. Use when inviting or off-boarding a member, granting or adjusting per-app access, or looking up which permission alias or role bundle to use in the offline `team permissions` catalog.
+description: Manage a Google Play Developer account's members and their permissions with `gplay team`. Use when inviting or off-boarding a member, auditing what one member can do, granting or adjusting per-app access, or looking up which permission alias or role bundle to use in the offline `team permissions` catalog.
 ---
 
 # gplay team (users + grants + permissions)
@@ -22,8 +22,8 @@ gplay team permissions --output json   # marks the admin-conferring alias/bundle
 single source of truth the write commands resolve `--role` / `--permissions`
 through (ADR-0016). It lists the curated **aliases** and the frozen **role
 bundles**: `viewer`, `reviewer`, `tester-manager`, `release-manager`, `admin`.
-Writes express permissions in friendly form — **`--role <bundle>` XOR
-`--permissions <alias,…>`** — and any raw `CAN_*` enum is also accepted.
+Writes express permissions in friendly form, **`--role <bundle>` XOR
+`--permissions <alias,…>`**, and any raw `CAN_*` enum is also accepted.
 `--scope account` resolves the account-wide `_GLOBAL` family (for `team
 users`); `--scope app` resolves the bare per-app family (for `team grants`).
 
@@ -31,6 +31,7 @@ users`); `--scope app` resolves the bare per-app family (for `team grants`).
 
 ```bash
 gplay team users list
+gplay team users view alice@example.com    # one member: permissions + per-app grants
 gplay team users add alice@example.com --role release-manager
 gplay team users set bob@example.com --permissions CAN_REPLY_TO_REVIEWS_GLOBAL
 gplay team users remove carol@example.com
@@ -38,14 +39,17 @@ gplay team users remove carol@example.com
 
 `add` invites a member (`users.create`); `set` **declaratively replaces** a
 member's account-wide permissions; `remove` off-boards them. These are the
-routine tier — CI-scriptable, no confirmation gate — **except** conferring
+routine tier (CI-scriptable, no confirmation gate), **except** conferring
 admin: `--role admin` (or a permission set including the all-permissions enum)
 requires the named **`--grant-admin`** flag. Handing out full control is never
 silent (ADR-0017).
 
-> There is intentionally **no `team users view`** — the Play API has no
-> `users.get`, only `users.list`. Use `team users list` (a client-side
-> `team users view <email>` is a separate, still-parked proposal).
+`users view <email>` answers "what can this person do?" in one call: their
+accessState, their account-wide permissions (admins flagged in the ADMIN
+field), and one row per app grant. The Play API has no `users.get`, so gplay
+lists the account and filters client-side, the same cost as
+`team grants list --user`. A member who is not on the account exits `30`, so
+`team users list` is the way to see who is.
 
 ## Per-app access grants
 
@@ -72,4 +76,3 @@ for grants, the resolved create/update verb plus the permission diff). Read
 
 Commands act on the active Account's developer id by default; override it with
 `--developer-id <id>` (it beats env and the project-local pin) per ADR-0015.
-Confirm flags with `gplay team <group> <command> --help`.
