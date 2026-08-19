@@ -1,0 +1,36 @@
+name: check-skills
+
+# The skills document a CLI they do not ship, so they drift silently when gplay
+# moves. This installs the latest gplay and resolves every documented command
+# and flag against the real binary. No credential is needed: every check reads
+# --help.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Monday 07:00 UTC: catches drift introduced by a gplay release, not by a
+    # commit here.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install gplay
+        run: |
+          curl -fsSL https://gplay.sh/install | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Report the version under test
+        run: gplay version
+
+      - name: Check the skills against the binary
+        run: python3 scripts/check-skills.py
