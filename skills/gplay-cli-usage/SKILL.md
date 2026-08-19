@@ -27,6 +27,16 @@ gplay exit-codes                   # the semantic exit-code table
 
 If this skill and `--help` ever disagree, trust `--help`.
 
+## Stability: the `[experimental]` banner
+
+gplay is **GA since v1.0.0**. A command whose `--help` opens with no
+`[experimental]` banner is covered by the Public contract: its name, flags,
+semantics and exit codes hold until a major bump, so CI can pin `v1`.
+
+The banner marks the exceptions, per command — those surfaces sit outside the
+contract and can change in any release, so CI that depends on one pins an
+**exact** version ([stability](https://gplay.sh/docs/concepts/stability/)).
+
 ## `gplay schema` — the offline API map
 
 Where `--help` documents gplay's own surface, `gplay schema` introspects the
@@ -69,6 +79,10 @@ Most commands need a target package. Resolution (ADR-0004):
 
 Pin once with `gplay init` (or `gplay apps init`) so day-to-day commands need
 no `--package`. Managing the registry of packages is the `gplay-apps` skill.
+
+Two surfaces address elsewhere: `customapps` and `team` key on the **developer
+account** (`--developer-id`), and `appstore` carries a second package —
+`--store-package`, the app store making the call, alongside the app it acts on.
 
 ## Output: table on a TTY, JSON in a pipe
 
@@ -167,7 +181,7 @@ Edit stays open and the pin remains — fix and re-run, or `discard`.
 
 (A few surfaces sit *outside* the Edit model on purpose — `compliance
 datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,
-`subscriptions`, `iap` are direct writes/reads with no `editId`, so
+`subscriptions`, `iap`, `appstore` are direct writes/reads with no `editId`, so
 `edits begin` does not batch them; their skills call that out.)
 
 ## Map of skills
@@ -189,3 +203,4 @@ datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,
 | App recovery (bad-release remediation) | `gplay-recovery` |
 | Device tier configs | `gplay-device-tiers` |
 | Subscriptions + one-time products (catalog) | `gplay-monetization` |
+| Alternative app stores (catalog export, hosted app review) | `gplay-appstore` |
