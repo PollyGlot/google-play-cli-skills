@@ -48,9 +48,8 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-appstore`](skills/gplay-appstore/SKILL.md) | Operating a third-party Android app store: mirroring Play's catalog export (one app, or the incremental update-event feed), and taking a hosted app through Google's review path — `create` the record, `upload` its APKs / images / policy documents, `update` to submit (irrevocable, `--confirm`-gated), `publish-status` to withdraw or restore it. |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
-> no-auth Android Publisher API introspection command (shipped in gplay
-> v0.5.0, `[experimental]`). It has no dedicated skill yet; `gplay-cli-usage`
-> documents it next to `--help`.
+> no-auth Android Publisher API introspection command (`[experimental]`). It
+> has no dedicated skill yet; `gplay-cli-usage` documents it next to `--help`.
 
 ## Roadmap
 
@@ -93,6 +92,19 @@ description: <what it does> … Use when <the trigger phrasing>.
 
 A missing or malformed `name`/`description` breaks `npx skills add`, so keep
 both fields present and well-formed when adding a skill.
+
+## Checking a change
+
+```bash
+python3 scripts/check-skills.py            # needs gplay on PATH
+python3 scripts/check-skills.py --offline  # frontmatter, links and style only
+```
+
+The script resolves every `gplay` invocation in the skills against the
+installed binary's real command tree and flag set, so a flag that no longer
+exists, an invented subcommand, or a frontmatter typo fails loudly instead of
+shipping. CI runs it on every pull request and weekly, since the drift usually
+comes from a gplay release rather than from a commit here.
 
 ## License
 
