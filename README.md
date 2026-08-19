@@ -45,6 +45,7 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 | [`gplay-games`](skills/gplay-games/SKILL.md) | Configuring a game's Play Games Services achievements and leaderboards (list/view/create/update/delete), addressed by the numeric Play Games application ID (not the package). Draft-only — publishing to players stays Console-only. |
 | [`gplay-recovery`](skills/gplay-recovery/SKILL.md) | Responding to a bad release: staging a draft app recovery, deploying it to force-update impacted users off the broken versionCode, widening its audience (append-only), or cancelling it. Deploy/cancel/add-targeting are `--confirm`-gated. |
 | [`gplay-device-tiers`](skills/gplay-device-tiers/SKILL.md) | Creating or inspecting device tier configs for tiered content delivery (device groups, an ordered tier set, country sets). Immutable — create/get/list only, no update or delete — so a new config is a new id. |
+| [`gplay-appstore`](skills/gplay-appstore/SKILL.md) | Operating a third-party Android app store: mirroring Play's catalog export (one app, or the incremental update-event feed), and taking a hosted app through Google's review path — `create` the record, `upload` its APKs / images / policy documents, `update` to submit (irrevocable, `--confirm`-gated), `publish-status` to withdraw or restore it. |
 
 > **Also covered by the foundation skill:** `gplay schema` — the offline,
 > no-auth Android Publisher API introspection command (shipped in gplay
@@ -53,8 +54,10 @@ other skills build on. The rest map one-to-one to a `gplay` surface.
 
 ## Roadmap
 
-The v1 set above tracks the current `gplay` GA surface. Skills for gated
-surfaces land as those CLI surfaces ship.
+The set above tracks the current `gplay` surface, GA since
+[**v1.0.0**](https://gplay.sh/docs/guides/migrate-to-1-0/). Commands the CLI
+marks `[experimental]` sit outside that contract — `gplay-cli-usage` says what
+that means for CI. Skills for gated surfaces land as those CLI surfaces ship.
 
 Subscriptions & IAP — the last open roadmap item, gated on
 [`#51`](https://github.com/PollyGlot/google-play-cli/issues/51) — shipped in
