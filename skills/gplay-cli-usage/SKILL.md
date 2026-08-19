@@ -1,6 +1,6 @@
 ---
 name: gplay-cli-usage
-description: The cross-cutting conventions every gplay command shares — credential and package resolution, output formats, semantic exit codes, the `--dry-run`/`--confirm` safety gates, and the Edit lifecycle. Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, or introspecting the Android Publisher API offline with `gplay schema`.
+description: The cross-cutting conventions every gplay command shares (credential and package resolution, output formats, semantic exit codes, the `--dry-run`/`--confirm` safety gates, and the Edit lifecycle). Use when running or designing any gplay command, wiring gplay into CI, branching on its exit codes, or introspecting the Android Publisher API offline with `gplay schema`.
 ---
 
 # gplay CLI conventions (foundation)
@@ -33,15 +33,15 @@ gplay is **GA since v1.0.0**. A command whose `--help` opens with no
 `[experimental]` banner is covered by the Public contract: its name, flags,
 semantics and exit codes hold until a major bump, so CI can pin `v1`.
 
-The banner marks the exceptions, per command — those surfaces sit outside the
+The banner marks the exceptions, per command; those surfaces sit outside the
 contract and can change in any release, so CI that depends on one pins an
 **exact** version ([stability](https://gplay.sh/docs/concepts/stability/)).
 
-## `gplay schema` — the offline API map
+## `gplay schema`: the offline API map
 
 Where `--help` documents gplay's own surface, `gplay schema` introspects the
 underlying **Android Publisher API** offline (no credential, no HTTP call) from
-an index compiled into the binary — does a method exist, what does it send and
+an index compiled into the binary: does a method exist, what does it send and
 return, what fields and enums does a type carry:
 
 ```bash
@@ -52,18 +52,18 @@ gplay schema edits.tracks.update    # a method's request/response, one hop deep
 gplay schema --method PATCH         # filter the method surface by HTTP verb
 ```
 
-`[experimental]` (gplay v0.5.0) — confirm the surface with `gplay schema --help`.
+`[experimental]`: confirm the surface with `gplay schema --help`.
 
 ## Which credential / account (resolution order)
 
 Every authenticated command resolves the service-account credential in this
 order, highest priority first:
 
-1. `--service-account <path-or-inline-json>` — a JSON file path **or** inline
+1. `--service-account <path-or-inline-json>`, a JSON file path **or** inline
    JSON content. Overrides everything below.
-2. `--account <name>` — a specific stored Account. Overrides env + the active
+2. `--account <name>`, a specific stored Account. Overrides env + the active
    Account.
-3. `GPLAY_SERVICE_ACCOUNT` env var — a path or inline JSON.
+3. `GPLAY_SERVICE_ACCOUNT` env var, a path or inline JSON.
 4. The **active** stored Account (set up via `gplay auth login`).
 
 Setting this up from scratch is the `gplay-setup` skill. Auth problems exit
@@ -81,37 +81,37 @@ Pin once with `gplay init` (or `gplay apps init`) so day-to-day commands need
 no `--package`. Managing the registry of packages is the `gplay-apps` skill.
 
 Two surfaces address elsewhere: `customapps` and `team` key on the **developer
-account** (`--developer-id`), and `appstore` carries a second package —
+account** (`--developer-id`), and `appstore` carries a second package,
 `--store-package`, the app store making the call, alongside the app it acts on.
 
 ## Output: table on a TTY, JSON in a pipe
 
 `--output` takes `table`, `json`, or `markdown`. The default is **auto**
 (ADR-0005): a human table on a terminal, JSON when piped or in CI. For
-machine consumption, ask for `--output json` explicitly — read commands pass
+machine consumption, ask for `--output json` explicitly; read commands pass
 the API payload through (ADR-0003), and write commands return the request/diff
 body, so a CI gate is usually one `jq` line. The pass-through promise is about
 *not reshaping the API*, not that every `--output json` is an API echo: the
-**offline reference** commands that wrap no API call — `team permissions` and
-`schema` — synthesize their own (gplay-owned, documented) JSON instead.
+**offline reference** commands that wrap no API call, `team permissions` and
+`schema`, synthesize their own (gplay-owned, documented) JSON instead.
 
 **stdout is data, stderr is logs.** Parse stdout; warnings, progress, and
 `-v/--verbose` flow steps go to stderr and never pollute the JSON. (Example:
 `reviews list` prints its "last 7 days only" warning to stderr.)
 
-## Exit codes — branch on the number, not the text
+## Exit codes: branch on the number, not the text
 
 `gplay exit-codes` prints the full table. The semantic codes:
 
 | Code | Meaning | Retry-safe |
 |---|---|---|
-| 0 | Success | — |
+| 0 | Success | n/a |
 | 1 | Generic error (fallback) | no |
 | 2 | CLI misuse (unknown flag/command, bad value, missing arg) | no |
-| 3 | A named safety flag is missing (`--confirm` / `--grant-admin`) — re-run with it | yes, with the flag |
-| 4 | Denied by environment policy (`GPLAY_READONLY`) — a mutating command was refused | no — change the environment |
+| 3 | A named safety flag is missing (`--confirm` / `--grant-admin`), re-run with it | yes, with the flag |
+| 4 | Denied by environment policy (`GPLAY_READONLY`), a mutating command was refused | no, change the environment |
 | 10 | Authentication failure | no |
-| 11 | Authorization (403 — SA not invited) | no |
+| 11 | Authorization (403, SA not invited) | no |
 | 20 | Client-side validation (bad AAB, unknown locale, …) | no |
 | 30 | API 4xx (not found, conflict, gone, …) | no |
 | 40 | API 5xx (upstream unhealthy) | **yes** |
@@ -119,7 +119,7 @@ body, so a CI gate is usually one `jq` line. The pass-through promise is about
 | 60 | State conflict (open edit, rate-limited, ambiguous target) | sometimes |
 
 Agents should treat `3` as "append the named flag and re-run", `4` as "the
-environment forbids this write — do not retry, change the deployment", `40`/`50`
+environment forbids this write; do not retry, change the deployment", `40`/`50`
 as "back off and retry", and `2`/`10`/`11`/`20`/`30` as "fix the input, do not
 retry blindly".
 
@@ -128,8 +128,8 @@ retry blindly".
 - **`--dry-run`** is available on write commands: it validates inputs and
   prints the payload/diff it *would* send, with no HTTP call (and usually no
   auth needed). Reach for it before any production-affecting write.
-- **`--confirm`** gates the writes that reach real users or the live store —
-  production releases, `metadata apply`, `compliance datasafety set` — and
+- **`--confirm`** gates the writes that reach real users or the live store,
+  production releases, `metadata apply`, `compliance datasafety set`, and
   destructive local writes like `auth logout`. Omitting it fails with exit `3`
   and names the flag (in the JSON error envelope: `requires: ["confirm"]`).
   `CI=true` never auto-confirms.
@@ -137,19 +137,19 @@ retry blindly".
   `gplay-team`.
 - **`GPLAY_READONLY=1`** (truthy = enforced) is the environment-level guard for
   agent deployments that must only read. Because the safety flags above are
-  *advisory* — an agent holding the credential can pass them itself — set this in
+  *advisory*, an agent holding the credential can pass them itself; set this in
   the environment and the kernel refuses **every mutating command** before
   credential resolution and before any network call, regardless of flags, while
   read commands and `--dry-run` previews keep working. Its refusal exits **`4`**
-  (denied by environment policy) — which, unlike `3`, is **not** resolvable by
+  (denied by environment policy), which, unlike `3`, is **not** resolvable by
   adding a flag; the only fix is to change the environment.
 
-When a write refuses for a missing flag, the message names it — that refusal is
+When a write refuses for a missing flag, the message names it; that refusal is
 *agent-resolvable* (ADR-0017): re-run with the flag it asked for. The
 `GPLAY_READONLY` refusal (exit `4`) is the deliberate exception: it is **not**
 agent-resolvable.
 
-## The Edit lifecycle — implicit by default, explicit when you batch
+## The Edit lifecycle: implicit by default, explicit when you batch
 
 Google Play mutations run inside a transactional **Edit**
 (`edits.insert → change → edits.commit`). gplay offers two ways to drive it.
@@ -173,13 +173,13 @@ gplay edits commit           # publish everything at once, and clear the pin
 
 While the pin exists, subsequent write commands reuse the open Edit instead of
 opening their own, so the changes commit together or not at all. In explicit
-mode there is **no** auto-commit and **no** auto-discard — the lifecycle is
+mode there is **no** auto-commit and **no** auto-discard; the lifecycle is
 yours until you `commit` or `discard`. Notes: a project (`gplay init`) is
 required since the pin lives under `.gplay/`; opening a second Edit while one is
 pinned is refused (**exit 60**); if `commit` fails (e.g. a validation error) the
-Edit stays open and the pin remains — fix and re-run, or `discard`.
+Edit stays open and the pin remains, fix and re-run, or `discard`.
 
-(A few surfaces sit *outside* the Edit model on purpose — `compliance
+(A few surfaces sit *outside* the Edit model on purpose: `compliance
 datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,
 `subscriptions`, `iap`, `appstore` are direct writes/reads with no `editId`, so
 `edits begin` does not batch them; their skills call that out.)

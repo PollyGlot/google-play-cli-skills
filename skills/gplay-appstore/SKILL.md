@@ -1,6 +1,6 @@
 ---
 name: gplay-appstore
-description: Alternative app store operations with gplay `appstore`. Use when operating a third-party Android app store — mirroring Play's catalog export or its update-event feed, or taking an app the store hosts through Google's review path (create, upload, update, publish-status).
+description: Alternative app store operations with gplay `appstore`. Use when operating a third-party Android app store, mirroring Play's catalog export or its update-event feed, or taking an app the store hosts through Google's review path (create, upload, update, publish-status).
 ---
 
 # gplay appstore (alternative app store operations)
@@ -11,10 +11,10 @@ Google for review. Publishing your own app to Google Play is `gplay-release-flow
 
 Shared conventions (auth, output, exit codes, `--dry-run`/`--confirm`, the
 `[experimental]` contract) are in `gplay-cli-usage`. Read the current flags from
-`gplay appstore <command> --help` — it is long and complete; this skill carries
-the order the commands go in and the traps between them.
+`gplay appstore <command> --help`: it is long and complete, and this skill
+carries the order the commands go in and the traps between them.
 
-## Caller and subject — two packages, one command
+## Caller and subject: two packages, one command
 
 | Flag | Role | Falls back to |
 |---|---|---|
@@ -57,7 +57,7 @@ The four writes are an ordered path: Google refuses everything else for an app
 until its record exists.
 
 ```bash
-# 1. Once per hosted app — the record.
+# 1. Once per hosted app: the record.
 gplay appstore create --package com.example.app --store-package com.mystore.app
 
 # 2. Upload each artifact; the printed id is the point of the call.
@@ -69,14 +69,14 @@ gplay appstore upload policy ./privacy.pdf --package com.example.app   # → fil
 gplay appstore update --file ./hosted-app.json --dry-run     # rehearse, zero HTTP
 gplay appstore update --file ./hosted-app.json --confirm     # irrevocable
 
-# 4. Later, to withdraw the app from the store — or put it back:
+# 4. Later, to withdraw the app from the store, or put it back:
 gplay appstore publish-status unpublished --package com.example.app
 gplay appstore publish-status published   --package com.example.app
 ```
 
 **`create` is permanent.** The API exposes no delete, so the record outlives any
 mistake; only its publish status can still change. A second `create` is a
-conflict (**exit 60**) — safe to retry after a transport failure, worth guarding
+conflict (**exit 60**), safe to retry after a transport failure, worth guarding
 in a script that runs more than once.
 
 **Uploads are inert.** An APK, image or document sits unused until an `update`
@@ -89,7 +89,7 @@ no staging step and no recall, so `--confirm` is mandatory (**exit 3** without
 it) and `CI=true` never auto-confirms. Rehearse with `--dry-run`, which
 validates the file and resolves the target with zero HTTP calls. The request
 body shape and its resolution rules are in
-[`update-body.md`](update-body.md) — read it before writing the file.
+[`update-body.md`](update-body.md); read it before writing the file.
 
 **`publish-status` is reversible in both directions**, so it carries no
 `--confirm`. Google treats an app as published once `update` succeeds; this

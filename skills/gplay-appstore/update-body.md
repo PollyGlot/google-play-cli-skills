@@ -34,7 +34,7 @@ come from Google's documentation for that declaration rather than from gplay.
 
 **The file travels verbatim.** gplay overwrites `packageName` with the resolved
 target and re-serialises nothing else, so a field it has never modelled still
-submits correctly — and a misspelled one is rejected by Google rather than
+submits correctly, and a misspelled one is rejected by Google rather than
 dropped from a submission you cannot recall.
 
 **Package resolution.** `--package` wins over a `packageName` in the file; a

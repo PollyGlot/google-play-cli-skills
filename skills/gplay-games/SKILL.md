@@ -5,11 +5,11 @@ description: Configure a game's Play Games Services achievements and leaderboard
 
 # gplay games (Play Games Services configuration)
 
-`gplay games` configures a game's **Play Games Services** resources —
+`gplay games` configures a game's **Play Games Services** resources,
 **achievement** and **leaderboard** configurations, each with the full CRUD set
 (`list` / `view` / `create` / `update` / `delete`). It is an Admin API surface:
 the developer *configures* the game. It is **not** the Play Games Services
-runtime the game itself calls (sign-in, score submission) — that is out of
+runtime the game itself calls (sign-in, score submission); that is out of
 scope. Shared conventions (auth, output, exit codes, `--dry-run`/`--confirm`)
 are in `gplay-cli-usage`. The whole namespace is `[experimental]`.
 
@@ -27,11 +27,11 @@ gplay games achievements list --application-id 1234567890
 gplay games leaderboards list --application-id 1234567890
 ```
 
-## Draft-only — there is no publish
+## Draft-only: there is no publish
 
 The single most important gotcha: every write here edits the **draft**
 configuration. The `published` copy players see is **read-only**, and the API
-exposes **no publish method** — pushing a draft live to players is **Play
+exposes **no publish method**; pushing a draft live to players is **Play
 Console-only**. So `gplay games … create/update` stages the change; a human
 finishes it in the Console. Don't expect a CLI command to make it live.
 
@@ -47,7 +47,7 @@ gplay games achievements create --application-id 123 \
 - Field flags: `--name` / `--description` (localized, under `--locale`, default
   `en-US`), `--type STANDARD|INCREMENTAL`, `--initial-state HIDDEN|REVEALED`,
   `--point-value`, and `--steps-to-unlock` (**INCREMENTAL only**).
-- Or `--from-json <file|->` for a full `AchievementConfiguration` body — the
+- Or `--from-json <file|->` for a full `AchievementConfiguration` body, the
   round-trip of `view --output json`, and the way to set **multiple locales at
   once**. `--from-json` and the field flags are **mutually exclusive**.
 
@@ -61,10 +61,10 @@ gplay games leaderboards create --application-id 123 \
 
 - Field flags: `--name` (localized, `--locale`), `--score-order
   LARGER_IS_BETTER|SMALLER_IS_BETTER`, `--score-min` / `--score-max`.
-- Or `--from-json <file|->` for a full `LeaderboardConfiguration` — the way to
+- Or `--from-json <file|->` for a full `LeaderboardConfiguration`, the way to
   set `scoreFormat` or multiple locales. Mutually exclusive with the field flags.
 
-## `update` replaces — fetch, edit, resend
+## `update` replaces: fetch, edit, resend
 
 `update <id>` is a **full PUT replace**: the body *replaces* the draft. For a
 partial edit, read the current config, edit it, and resend it whole:
@@ -81,7 +81,7 @@ to preserve a rich body (multiple locales, nested fields).
 
 ## Safety
 
-- `create` / `update` are **routine draft writes** — no `--confirm`. Rehearse
+- `create` / `update` are **routine draft writes**; no `--confirm`. Rehearse
   with `--dry-run` (no HTTP; `--output json` prints the request body).
 - `delete <id>` is **irreversible** → requires **`--confirm`** (missing → exit
   `3`); `CI=true` never auto-confirms.
@@ -89,6 +89,3 @@ to preserve a rich body (multiple locales, nested fields).
 - `--output json` mirrors the API response verbatim (ADR-0003); `list` paging is
   `--max-results` + `--page-token` (read `nextPageToken` from the response).
 
-Confirm the current verbs and flags with `gplay games --help` and
-`gplay games <group> <command> --help` — the surface is `[experimental]`
-(ADR-0033) and may still evolve.
