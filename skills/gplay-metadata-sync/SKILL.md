@@ -56,6 +56,19 @@ flag. `CI=true` does not auto-confirm. The publish is **atomic**: all
 locales patch inside one Edit committed once, and any per-locale failure
 discards the Edit (nothing published).
 
+### The tree stays inside the repo
+
+Every file gplay reads or writes under `--dir` must resolve **inside the
+repo** once symlinks are followed: a `title.txt` symlinked to a file outside
+the tree, or a pre-placed link where `pull` will write, is refused rather than
+followed. Locale names are checked in BCP 47 (`en-US`, not `en_US`) before an
+Edit opens, with every offending file named at once. Monorepos that share
+translations or assets through symlinks can set
+`GPLAY_ALLOW_EXTERNAL_SYMLINKS=1` (same shape as `GPLAY_READONLY`): symlink
+egress is then followed, one `NOTE` per outbound path on stderr, while a `..`
+escape and any path derived from API data (a locale Play returns, a package
+name) stay contained regardless.
+
 ## Images
 
 ```bash

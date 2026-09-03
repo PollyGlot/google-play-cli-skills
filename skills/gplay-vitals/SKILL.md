@@ -65,7 +65,15 @@ embedded in the binary; an unknown name is rejected with the valid set listed
 (gplay never invents a metric or dimension). With no `--metrics`, the set's
 primary metric is used. The metric-set ids are `crashrate`, `anrrate`,
 `slowstartrate`, `slowrenderingrate`, `excessivewakeuprate`, `lmkrate`,
-`stuckbackgroundwakelockrate`, the same ones the presets wrap.
+`stuckbackgroundwakelockrate` (the same ones the presets wrap), plus two
+memory sets with **no preset**, reachable only through `query`:
+`anonrssandswapmemoryusage` (anonymous RSS + swap) and `bitmapmemoryusage`.
+Supported periods are per metric set: the memory sets are **DAILY only**, and
+`--period HOURLY` on one of them is refused offline (exit `2`) naming the set.
+
+```bash
+gplay vitals query bitmapmemoryusage --since 28d --dimensions versionCode
+```
 
 ## `vitals errors`: reports, issues, counts
 
@@ -98,7 +106,8 @@ gplay vitals anomalies --filter 'activeBetween("2026-01-01T00:00:00Z", UNBOUNDED
 Lists the metric anomalies (unexpected crash/ANR spikes, …) Play detected.
 `--since` builds an `activeBetween(...)` window for you; `--filter` passes a raw
 AIP-160 predicate and **overrides** `--since` when you need an open-ended range.
-`--limit 0` returns all (no cap).
+`--limit 0` returns all (no cap); a capped list prints a `warning:` on stderr,
+so an agent reading stdout alone cannot tell a full list from a truncated one.
 
 ## Freshness: an empty window is not zero
 

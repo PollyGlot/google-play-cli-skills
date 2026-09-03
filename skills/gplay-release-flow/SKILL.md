@@ -59,13 +59,35 @@ during a big upload resumes instead of restarting from zero. It is automatic;
 there is no flag to set (and no `--timeout` cap applies to the upload leg).
 
 `upload` also accepts a **legacy `.apk`** (`[experimental]`, via
-`edits.apks.upload`): AAB vs APK is auto-detected by extension, and
+`edits.apks.upload`): the extension picks the API call (AAB vs APK), and
 `--format apk|bundle` overrides when the extension is ambiguous. The rest of
 the pipeline (track, notes, `--mapping`, draft-by-default on production,
 `--dry-run`/`--confirm`) is identical. Google has required the AAB for new
 apps since August 2021, so APK uploads only serve existing apps still
 distributed as APKs; if the app requires an App Bundle, Google's rejection
 passes through verbatim.
+
+### Local preflight: the file is inspected before any byte leaves
+
+Before the upload, gplay opens the artifact locally and checks two things by
+**structure, never by extension**: the container really is the format the call
+promised (an AAB is a zip carrying `BundleConfig.pb`, an APK carries
+`AndroidManifest.xml` at its root), and the package name its manifest declares
+matches the package being released. A mismatch fails offline in milliseconds
+with exit `20`, naming what was expected and what was found; no Edit is
+opened and no upload session is reserved. A renamed file (`app.apk` that is
+really an AAB, or a build for another package) is caught here, not by Google
+minutes later. When the manifest cannot be read, the preflight degrades to a
+stderr `NOTE` and the upload proceeds. `--dry-run` reports the preflight
+result; `--skip-preflight` uploads the file as-is. The same check guards
+`releases sharing upload`, `customapps create` and `appstore upload apk`;
+`releases expansion-files upload` checks only that the file is *not* an
+AAB/APK. `--mapping` is not preflighted (a mapping is not an Android
+container).
+
+Release-notes files must be named in **BCP 47** (`en-US.txt`, `pt-BR.txt`).
+An underscore form such as `en_US.txt` is refused before the Edit opens, every
+offending file named in one error, so fix them all at once.
 
 ## Promote a build up the ladder (no re-upload)
 
@@ -185,8 +207,10 @@ gplay releases sharing upload ./app.aab --dry-run
 **Internal App Sharing** and prints the private, shareable `downloadUrl` an
 authorized tester follows to install it. It **bypasses tracks and the Edit
 lifecycle entirely**, a QA/preview gesture, not a release: no track, no
-rollout, no `versionCode` promotion. APK vs AAB is auto-detected by extension
-(`--format apk|bundle` overrides). No `--confirm` is needed (the link is private
+rollout, no `versionCode` promotion. The extension picks APK vs AAB
+(`--format apk|bundle` overrides), and the same local preflight as `releases
+upload` verifies container and package name before any byte is sent
+(`--skip-preflight` to bypass). No `--confirm` is needed (the link is private
 and creates no release), but `GPLAY_READONLY=1` still refuses it (exit `4`).
 `--output json` passes the `InternalAppSharingArtifact` through verbatim
 (`downloadUrl`, `certificateFingerprint`, `sha256`).
