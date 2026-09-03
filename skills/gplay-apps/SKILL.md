@@ -1,6 +1,6 @@
 ---
 name: gplay-apps
-description: Manage gplay's local app registry and app-level details. Use when onboarding packages into gplay, discovering which apps a credential can reach (`apps accessible list`), listing or removing registered apps, pinning a package to the repo, or reading/patching app details (default language, contact info).
+description: Manage gplay's local app registry and app-level details, and sweep the account for consistency drift with `apps audit`. Use when onboarding packages into gplay, discovering which apps a credential can reach (`apps accessible list`), listing or removing registered apps, pinning a package to the repo, reading/patching app details (default language, contact info), or gating CI on lingering drafts, empty release notes, locale drift or a missing production release.
 ---
 
 # gplay apps (registry + app details)
@@ -85,4 +85,35 @@ reversible); use `--dry-run` to preview the patch with no HTTP call.
 
 > The bare `gplay apps details` command prints help; the read is
 > `apps details view`.
+
+## `apps audit`: a read-only consistency sweep
+
+`apps audit` (`[experimental]`) sweeps apps for drift and reports it. It is
+strictly read-only: one throwaway Edit plus two reads per app, nothing written.
+
+```bash
+gplay apps audit                                   # every app the credential can see
+gplay apps audit com.example.a com.example.b       # only these (skips discovery)
+gplay apps audit --check lingering-drafts --check empty-release-notes
+gplay apps audit --skip-check locale-drift --output json
+```
+
+With no argument the scope is the server-side inventory `apps accessible list`
+prints, so on a large account either name the packages or accept one Edit per
+app. The four checks have **stable IDs**, usable as CI filters:
+
+| Check | Finding |
+|---|---|
+| `lingering-drafts` | a track still holds a draft release |
+| `locale-drift` | the app's listing locales are a subset of the set seen across the audited apps (needs 2+ apps) |
+| `empty-release-notes` | a shipped release has no, or blank, release notes |
+| `no-production-release` | the production track carries no release |
+
+Read the exit code as a gate, not as success or failure: `0` means every app
+was read and nothing was found, **`70`** means the report carries findings.
+An app the sweep could not read is listed under `errors` without aborting the
+run, and in that case the ordinary API or network code wins over `70`, so a
+partial sweep never passes as clean. The JSON report is gplay-owned (`ran`,
+`findings`, `errors`, `summary`); `ran` names the apps and checks that
+actually executed, check it before trusting an empty `findings`.
 

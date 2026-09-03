@@ -22,7 +22,7 @@ defaults from the binary, never from memory:
 gplay --help                       # the whole command tree
 gplay <group> --help               # a namespace (releases, tracks, team, …)
 gplay <group> <command> --help     # one command, with its real flags
-gplay exit-codes                   # the semantic exit-code table
+gplay exit-codes                   # the semantic exit-code table + diagnostic codes
 ```
 
 If this skill and `--help` ever disagree, trust `--help`.
@@ -50,6 +50,7 @@ gplay schema tracks                 # match across method id, REST path, type na
 gplay schema Track                  # expand a schema's fields, types, enums
 gplay schema edits.tracks.update    # a method's request/response, one hop deep
 gplay schema --method PATCH         # filter the method surface by HTTP verb
+gplay schema --codes                # gplay's own diagnostic-code catalog (see Exit codes)
 ```
 
 `[experimental]`: confirm the surface with `gplay schema --help`.
@@ -86,8 +87,11 @@ account** (`--developer-id`), and `appstore` carries a second package,
 
 ## Output: table on a TTY, JSON in a pipe
 
-`--output` takes `table`, `json`, or `markdown`. The default is **auto**
-(ADR-0005): a human table on a terminal, JSON when piped or in CI. For
+`--output` takes `table`, `json`, or `markdown`. Resolution, most explicit
+first: the `--output` flag, then `$GPLAY_DEFAULT_OUTPUT`, then **auto**
+(ADR-0005): a human table on a terminal, JSON when piped or in CI. The env var
+beats the `CI` heuristic too (it is a value someone typed, `CI`/TTY are
+guesses); an unknown value is a usage error (exit `2`) naming the variable. For
 machine consumption, ask for `--output json` explicitly; read commands pass
 the API payload through (ADR-0003), and write commands return the request/diff
 body, so a CI gate is usually one `jq` line. The pass-through promise is about
@@ -98,6 +102,21 @@ body, so a CI gate is usually one `jq` line. The pass-through promise is about
 **stdout is data, stderr is logs.** Parse stdout; warnings, progress, and
 `-v/--verbose` flow steps go to stderr and never pollute the JSON. (Example:
 `reviews list` prints its "last 7 days only" warning to stderr.)
+
+Two stderr signals worth reading before trusting a listing:
+
+- **Truncation.** When `--limit` cuts a list, gplay prints a `warning:` line
+  on stderr; stdout is byte-for-byte what it would be without the warning. An
+  agent that only parses stdout cannot tell "that's all" from "capped", so
+  read stderr, or pass `--limit 0` where the command allows it.
+- **Redaction.** Credentials (PEM blocks, service-account secrets,
+  `Authorization` headers, JWTs, Google tokens) are masked on stderr; stdout
+  stays verbatim. Do not expect a secret to appear in a diagnostic line.
+
+**Every single-value flag is accepted once.** A repeated flag (`--account a
+--account b`, and even `-vv`) fails with exit `2` before auth and before any
+HTTP call; only list-valued flags such as `--check` or `--stars` repeat. When
+building a command line incrementally, replace a flag, never append it twice.
 
 ## Exit codes: branch on the number, not the text
 
@@ -117,11 +136,32 @@ body, so a CI gate is usually one `jq` line. The pass-through promise is about
 | 40 | API 5xx (upstream unhealthy) | **yes** |
 | 50 | Network (timeout, DNS, refused) | **yes** |
 | 60 | State conflict (open edit, rate-limited, ambiguous target) | sometimes |
+| 70 | Findings present: a read-only check ran to completion and reported drift (`apps audit`) | n/a, not an error |
 
 Agents should treat `3` as "append the named flag and re-run", `4` as "the
 environment forbids this write; do not retry, change the deployment", `40`/`50`
-as "back off and retry", and `2`/`10`/`11`/`20`/`30` as "fix the input, do not
-retry blindly".
+as "back off and retry", `2`/`10`/`11`/`20`/`30` as "fix the input, do not
+retry blindly", and `70` as "the check worked, act on its report". `70` is a
+gate result, not a failure: the command read everything it meant to read.
+When a check command could not read some target, the ordinary API or network
+code wins over `70`, so a sweep with holes never returns a clean `0`.
+
+### Diagnostic codes: discriminate failures that share an exit code
+
+Under `--output json` a failure carries a stable, machine-readable envelope on
+**stdout** (ADR-0044; stderr keeps the human prose):
+
+```json
+{"error":{"code":"EDIT_ALREADY_EXISTS","exitCode":60,"retryable":false,"message":"..."}}
+```
+
+`code` is SCREAMING_SNAKE and append-only; `retryable` is the bit to branch
+on. The value of the envelope is where one exit code hides several causes:
+`60` covers `STATE_CONFLICT`, `EDIT_ALREADY_EXISTS` (commit or discard the
+open Edit), `EDIT_EXPIRED` (begin a new Edit and replay) and
+`RATE_LIMIT_EXCEEDED` (the only retryable one). `30` splits into
+`INVALID_ARGUMENT`, `NOT_FOUND` and `API_ERROR`. `gplay schema --codes`
+prints the whole catalog offline (`--output json` for a machine).
 
 ## Safety: `--dry-run` everywhere, `--confirm` for live writes
 

@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   check:
@@ -33,4 +34,37 @@ jobs:
         run: gplay version
 
       - name: Check the skills against the binary
-        run: python3 scripts/check-skills.py
+        id: check
+        run: |
+          set -o pipefail
+          python3 scripts/check-skills.py 2>&1 | tee check.log
+
+      # A red scheduled run has no author to notify, so it goes unnoticed for
+      # days. Open (or refresh) one issue carrying the script's output instead;
+      # it closes itself when a later scheduled run is green.
+      - name: Open or update the drift issue
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(gplay version | head -1)"
+          title="skills drifted from $(printf "%s" "$version" | cut -d"(" -f1 | sed "s/ *$//")"
+          body="$(printf '%s\n\n```\n%s\n```\n\nRun: %s' \
+            "The Monday check found skills out of step with the installed gplay binary." \
+            "$(cat check.log)" \
+            "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")"
+          existing="$(gh issue list --label skills-drift --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body" --label skills-drift
+          fi
+
+      - name: Close the drift issue when green again
+        if: success() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list --label skills-drift --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Green again against $(gplay version | head -1)."
+          done
