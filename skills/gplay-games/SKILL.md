@@ -54,9 +54,11 @@ gplay games achievements create --application-id 123 \
 ## Leaderboards
 
 ```bash
+gplay games leaderboards view <leaderboardId> --output json     # read one
 gplay games leaderboards create --application-id 123 \
   --name "High Scores" --score-order LARGER_IS_BETTER \
   --score-min 0 --score-max 1000000
+gplay games leaderboards update <leaderboardId> --name "Top Scores"
 ```
 
 - Field flags: `--name` (localized, `--locale`), `--score-order
@@ -78,6 +80,18 @@ gplay games achievements update <id> --from-json ach.json
 The field flags on `update` send only what they name, so `--name` alone is fine
 for a one-field change; reach for the fetch-edit-resend round-trip when you need
 to preserve a rich body (multiple locales, nested fields).
+
+## `delete` is irreversible
+
+```bash
+gplay games achievements delete <achievementId> --dry-run
+gplay games achievements delete <achievementId> --confirm
+gplay games leaderboards delete <leaderboardId> --confirm
+```
+
+Deleting a draft configuration cannot be undone, so both `delete` commands sit
+on the `--confirm` tier: missing the flag exits `3` naming it, `--dry-run`
+rehearses with no HTTP call, and `GPLAY_READONLY=1` refuses it (exit `4`).
 
 ## Safety
 

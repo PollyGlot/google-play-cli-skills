@@ -3,8 +3,9 @@
 
 The skills document a CLI they do not ship, so the failure that matters is
 drift: a flag that no longer exists, a command declared absent that shipped
-three versions ago, a frontmatter typo that makes `npx skills add` skip the
-skill silently. Nothing else in this repo catches those.
+three versions ago, a namespace the CLI grew that no skill names, a
+frontmatter typo that makes `npx skills add` skip the skill silently. Nothing
+else in this repo catches those.
 
 Usage:
     python3 scripts/check-skills.py            # all checks
@@ -28,6 +29,9 @@ GPLAY = os.environ.get("GPLAY_BIN", "gplay")
 SKILLS_GLOB = "skills/**/*.md"
 # Commands whose --help is not a gplay surface a skill would document.
 SKIP_SUBCOMMANDS = {"help", "completion", "version", "install-skills", "exit-codes"}
+# Leaf commands a skill need not name: the README owns them, or they are
+# gplay's own plumbing rather than a Play surface.
+UNCOVERED_OK = {("init",), ("edits", "status")}
 PLACEHOLDER = re.compile(r"[<>…\[\]{}$]")
 # A bare lowercase word: what a subcommand looks like, unlike a package name,
 # a path or a flag value.
@@ -213,6 +217,55 @@ def check_invocations(findings: Findings) -> int:
     return checked
 
 
+def leaves(path: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
+    """Every leaf command of the installed binary, as a path tuple."""
+    found: set[tuple[str, ...]] = set()
+    for sub in subcommands(path):
+        if not path and sub in SKIP_SUBCOMMANDS:
+            continue
+        child = (*path, sub)
+        # The root help lists "gplay exit-codes" under help topics, which the
+        # subcommand parser reads as a command named "gplay". cobra answers an
+        # unknown child's --help with the parent's help, exit 0, so the only
+        # tell is identical text: stop the walk there instead of recursing
+        # into the whole tree again.
+        if help_text(child)[1] == help_text(path)[1]:
+            continue
+        below = subcommands(child)
+        found |= leaves(child) if below else {child}
+    return found
+
+
+def check_coverage(findings: Findings) -> None:
+    """Every leaf command the binary ships is named by at least one skill.
+
+    The invocation check only sees what a skill already documents, so a whole
+    namespace added by a gplay release (`signing` in v1.3.0) sails through it.
+    This is the inverse: walk the binary, then look for each leaf in the
+    skills. A leaf counts as covered when some skill mentions its full path
+    (`gplay signing enroll`, or `signing enroll` in prose) at least once.
+    """
+    corpus = "\n".join(
+        open(path, encoding="utf-8").read()
+        for path in sorted(glob.glob(SKILLS_GLOB, recursive=True))
+    )
+    missing = sorted(
+        leaf for leaf in leaves()
+        if leaf not in UNCOVERED_OK and " ".join(leaf) not in corpus
+    )
+    if not missing:
+        return
+    by_group: dict[str, list[str]] = {}
+    for leaf in missing:
+        by_group.setdefault(leaf[0], []).append(" ".join(leaf))
+    for group, cmds in sorted(by_group.items()):
+        findings.add(
+            "skills", 0,
+            f"no skill documents: {', '.join('gplay ' + c for c in cmds)} "
+            f"(add it to a skill, or to UNCOVERED_OK in this script)",
+        )
+
+
 def check_exit_code_table(findings: Findings) -> None:
     """The table in gplay-cli-usage lists exactly the codes `gplay exit-codes` prints."""
     path = "skills/gplay-cli-usage/SKILL.md"
@@ -260,6 +313,7 @@ def main() -> int:
     checked = 0
     if online:
         checked = check_invocations(findings)
+        check_coverage(findings)
         check_exit_code_table(findings)
 
     files = len(glob.glob(SKILLS_GLOB, recursive=True))
