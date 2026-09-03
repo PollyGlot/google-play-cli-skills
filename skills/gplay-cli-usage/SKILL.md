@@ -244,3 +244,4 @@ datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,
 | Device tier configs | `gplay-device-tiers` |
 | Subscriptions + one-time products (catalog) | `gplay-monetization` |
 | Alternative app stores (catalog export, hosted app review) | `gplay-appstore` |
+| Play App Signing with a self-hosted KMS key | `gplay-signing` |
