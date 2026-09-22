@@ -1,39 +1,30 @@
 ---
 name: gplay-games
-description: Configure a game's Play Games Services achievements and leaderboards with gplay `games`, keyed by the numeric `--application-id`; writes touch the draft only (publishing to players is Console-only). Use when creating or editing achievements or leaderboards, scripting their config in CI, or round-tripping a configuration as JSON.
+description: Play Games Services achievements and leaderboards with gplay `games` (draft config only; publishing to players is Console-only). Use when creating, editing, deleting or exporting a game's achievements or leaderboards.
 ---
 
 # gplay games (Play Games Services configuration)
 
-`gplay games` configures a game's **Play Games Services** resources,
-**achievement** and **leaderboard** configurations, each with the full CRUD set
-(`list` / `view` / `create` / `update` / `delete`). It is an Admin API surface:
-the developer *configures* the game. It is **not** the Play Games Services
-runtime the game itself calls (sign-in, score submission); that is out of
-scope. Shared conventions (auth, output, exit codes, `--dry-run`/`--confirm`)
-are in `gplay-cli-usage`. The whole namespace is `[experimental]`.
+`gplay games` configures a game's Play Games Services **achievement** and
+**leaderboard** configurations. Shared conventions are in `gplay-cli-usage`.
+The whole namespace is `[experimental]`.
 
-## Addressing: `--application-id`, not `--package`
+## Addressing: the numeric `--application-id`
 
-This is the trap. Play Games resources are keyed by the **numeric Play Games
-application ID** (a distinct ID space), *not* the Android package name.
-**`--application-id <numeric-id>` is required on `list` and `create`**; the
-per-resource commands `view` / `update` / `delete` are addressed by the
-achievement/leaderboard id alone (no `--application-id`). The
-`.gplay/config.json` package pin does **not** apply anywhere here.
+Play Games resources are keyed by the numeric Play Games application ID, not
+the package: `--application-id` on `list`/`create`, the resource id alone on
+`view`/`update`/`delete`. The `.gplay/config.json` pin plays no part here.
 
 ```bash
 gplay games achievements list --application-id 1234567890
 gplay games leaderboards list --application-id 1234567890
 ```
 
-## Draft-only: there is no publish
+## Writes land in the draft; publishing is Console-only
 
-The single most important gotcha: every write here edits the **draft**
-configuration. The `published` copy players see is **read-only**, and the API
-exposes **no publish method**; pushing a draft live to players is **Play
-Console-only**. So `gplay games … create/update` stages the change; a human
-finishes it in the Console. Don't expect a CLI command to make it live.
+Every write edits the draft. There is no publish method: `create`/`update`
+stage the change, then a human publishes it in the Play Console. Say so when
+handing off.
 
 ## Achievements
 
@@ -44,12 +35,8 @@ gplay games achievements create --application-id 123 \
   --type STANDARD --initial-state REVEALED --point-value 10
 ```
 
-- Field flags: `--name` / `--description` (localized, under `--locale`, default
-  `en-US`), `--type STANDARD|INCREMENTAL`, `--initial-state HIDDEN|REVEALED`,
-  `--point-value`, and `--steps-to-unlock` (**INCREMENTAL only**).
-- Or `--from-json <file|->` for a full `AchievementConfiguration` body, the
-  round-trip of `view --output json`, and the way to set **multiple locales at
-  once**. `--from-json` and the field flags are **mutually exclusive**.
+Field flags, or `--from-json` for a full body: the round-trip of
+`view --output json`, and the way to set several locales at once.
 
 ## Leaderboards
 
@@ -61,15 +48,10 @@ gplay games leaderboards create --application-id 123 \
 gplay games leaderboards update <leaderboardId> --name "Top Scores"
 ```
 
-- Field flags: `--name` (localized, `--locale`), `--score-order
-  LARGER_IS_BETTER|SMALLER_IS_BETTER`, `--score-min` / `--score-max`.
-- Or `--from-json <file|->` for a full `LeaderboardConfiguration`, the way to
-  set `scoreFormat` or multiple locales. Mutually exclusive with the field flags.
-
 ## `update` replaces: fetch, edit, resend
 
-`update <id>` is a **full PUT replace**: the body *replaces* the draft. For a
-partial edit, read the current config, edit it, and resend it whole:
+`update <id>` is a full PUT replace: fetch, edit, resend with `--from-json`.
+The field flags alone are fine for a one-field change.
 
 ```bash
 gplay games achievements view <id> --output json > ach.json
@@ -77,29 +59,12 @@ gplay games achievements view <id> --output json > ach.json
 gplay games achievements update <id> --from-json ach.json
 ```
 
-The field flags on `update` send only what they name, so `--name` alone is fine
-for a one-field change; reach for the fetch-edit-resend round-trip when you need
-to preserve a rich body (multiple locales, nested fields).
+## Safety
 
-## `delete` is irreversible
+`create`/`update` are routine draft writes (`--dry-run` previews the request
+body). `delete` is irreversible and sits on the `--confirm` tier:
 
 ```bash
-gplay games achievements delete <achievementId> --dry-run
 gplay games achievements delete <achievementId> --confirm
 gplay games leaderboards delete <leaderboardId> --confirm
 ```
-
-Deleting a draft configuration cannot be undone, so both `delete` commands sit
-on the `--confirm` tier: missing the flag exits `3` naming it, `--dry-run`
-rehearses with no HTTP call, and `GPLAY_READONLY=1` refuses it (exit `4`).
-
-## Safety
-
-- `create` / `update` are **routine draft writes**; no `--confirm`. Rehearse
-  with `--dry-run` (no HTTP; `--output json` prints the request body).
-- `delete <id>` is **irreversible** → requires **`--confirm`** (missing → exit
-  `3`); `CI=true` never auto-confirms.
-- `GPLAY_READONLY` refuses every live write (exit `4`); `--dry-run` is exempt.
-- `--output json` mirrors the API response verbatim (ADR-0003); `list` paging is
-  `--max-results` + `--page-token` (read `nextPageToken` from the response).
-

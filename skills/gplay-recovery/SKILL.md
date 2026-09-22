@@ -1,24 +1,16 @@
 ---
 name: gplay-recovery
-description: Drive Google Play app recovery actions with gplay `recovery`, the incident-response remediation that force-updates users stuck on a bad release to a safe version. Use when a shipped build is broken and you need to push affected users off it, or to inspect and steer an existing recovery (deploy, widen targeting, cancel).
+description: App recovery actions with gplay `recovery`, the incident-response path that force-updates users stuck on a bad release to a safe version. Use when a shipped build is broken and affected users must be pushed off it, or when inspecting, deploying, widening or cancelling an existing recovery.
 ---
 
 # gplay recovery (incident response for a bad release)
 
-`gplay recovery` manages **app recovery actions**, Google's targeted
-incident-response remediation. When a shipped `versionCode` turns out to be bad,
-a recovery **force-updates the impacted users** to a safe version via a remote
-in-app update. Shared conventions (auth, output, exit codes,
-`--dry-run`/`--confirm`, `--package` pinning) are in `gplay-cli-usage`. The whole
-namespace is `[experimental]`.
+`gplay recovery` force-updates the users stuck on a bad `versionCode` to a
+safe version. Shared conventions are in `gplay-cli-usage`. The whole namespace
+is `[experimental]`.
 
-Two structural facts to hold onto:
-
-- **Keyed by package + `versionCode`**, and it lives **outside the Edit model**
-  (no `editId`), a recovery has its own `appRecoveryId` and a **draft → active
-  → canceled** lifecycle.
-- **`--version-code` is the bad version**, the one users are stuck on that you
-  want them off.
+A recovery is keyed by package + `versionCode`, lives outside the Edit model
+(no `editId`), and follows a draft → active → canceled lifecycle.
 
 ## The lifecycle, in order
 
@@ -41,39 +33,14 @@ gplay recovery add-targeting <appRecoveryId> --regions DE,ES --confirm
 gplay recovery cancel <appRecoveryId> --confirm
 ```
 
-## `create`: a harmless draft
+## The audience only widens
 
-`create` stages a draft; **nothing reaches a user** until `deploy`. Because a
-draft is harmless it needs **no `--confirm`** (use `--dry-run` to validate
-inputs with no HTTP call). It requires `--version-code` **and at least one
-audience selector**: `--all-users`, `--regions <CC,CC>` (CLDR codes), or
-`--sdk-levels <N,N>`. The recovery type defaults to a remote in-app update
-(`--remote-in-app-update`, the only type Play models today).
+`add-targeting` is append-only; shrinking means `cancel` then a fresh
+`create`. Start with the narrowest audience (`--regions`/`--sdk-levels`) that
+covers the incident.
 
-## `deploy` / `cancel`: the gated writes
+## Reading and stopping
 
-- **`deploy <id>`** activates the draft, the production-impacting step that
-  force-pushes users off the bad build. Requires **`--confirm`** (missing → exit
-  `3`); rehearse with `--dry-run`.
-- **`cancel <id>`** stops the action: it persists with status `CANCELED` and
-  **cannot be resumed**; this is irreversible. Requires **`--confirm`**. To
-  target users again after a cancel you must **create a new recovery**.
-- `GPLAY_READONLY` refuses both (exit `4`).
-
-## `add-targeting` is append-only: it can only widen
-
-The audience of a recovery can be **widened but never narrowed**.
-`add-targeting <id>` adds users/regions/SDK levels (`--all-users`, `--regions`,
-`--sdk-levels`), requires `--confirm`, and is **append-only** at the API level.
-There is no "remove targeting". **To shrink the blast radius, you must `cancel`
-the recovery and `create` a fresh one**, plan the initial audience
-conservatively for exactly this reason.
-
-## `list`, and the missing `view`
-
-`recovery list --version-code <N>` shows each recovery's id, status, and
-creation time (`--version-code` required, recoveries are keyed by version).
-There is **no `recovery view`**; the API exposes only `list`, so `list` is how
-you read a recovery's state and find its `appRecoveryId`. `--output json`
-passes `ListAppRecoveriesResponse` through verbatim.
-
+`list` is the only read (there is no `view`): it is how you find an
+`appRecoveryId` and its status. `cancel` is terminal: the action persists as
+`CANCELED`; to target users again, `create` a new recovery.
