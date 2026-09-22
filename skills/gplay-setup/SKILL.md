@@ -1,25 +1,19 @@
 ---
 name: gplay-setup
-description: Onboard gplay authentication from zero with the `auth` namespace. Use when setting up gplay auth for the first time, switching or rotating service accounts, managing stored accounts, or diagnosing why an authenticated gplay command fails with an auth error (exit 10/11).
+description: gplay authentication with `gplay auth`. Use when setting up gplay for the first time, switching, rotating or removing a stored service account, or diagnosing an auth failure (exit 10/11) on any gplay command.
 ---
 
-# gplay setup (auth onboarding)
+# gplay setup (auth)
 
-Get gplay talking to the Google Play Developer API. This skill covers the
-`auth` namespace end to end; for the conventions every command shares
-(credential resolution order, exit codes, output), see `gplay-cli-usage`.
+Covers the `auth` namespace. Shared conventions are in `gplay-cli-usage`.
 
 ## The credential
 
 gplay authenticates as a **Google Cloud service account** with the
-*Android Publisher* role, invited to your Play Console. You supply its JSON
-key one of three ways (resolution order in `gplay-cli-usage`):
-
-- `GPLAY_SERVICE_ACCOUNT`, a **path** to the JSON file *or* the **inline
-  JSON** itself (handy for CI secrets).
-- `--service-account <path-or-json>` on any command, overrides the env.
-- A stored **Account** registered with `gplay auth login` (the credential
-  lands in the OS keystore, see `gplay auth status` for where).
+*Android Publisher* role, invited to your Play Console. Supply its JSON key
+via `gplay auth login` (a stored Account in the OS keystore, with a file
+fallback in CI containers), `GPLAY_SERVICE_ACCOUNT`, or `--service-account`;
+precedence in `gplay-cli-usage`.
 
 ## First-run flow
 
@@ -35,11 +29,10 @@ gplay auth status
 gplay auth doctor --package com.example.app
 ```
 
-`auth status` prints the active Account, the keystore backend, and the
-credential's location. `auth doctor` runs ordered checks and is the first
-thing to reach for when an authenticated command fails; it pinpoints whether
-the problem is a bad key (exit `10`) or a service account that is valid but
-not invited on the app (exit `11`, only tested when `--package` is passed).
+`auth doctor` is the first move when an authenticated command fails: it stops
+at the first failing check, so the report says whether the key is bad (exit
+`10`) or valid but not invited on the app (exit `11`, tested only with
+`--package`).
 
 ## Managing stored accounts
 
@@ -48,14 +41,11 @@ gplay auth list                     # every registered Account
 gplay auth logout <name> --confirm  # remove an Account from the config + keystore
 ```
 
-`auth logout` removes a stored credential, so it is `--confirm`-gated like
-every destructive write (missing → exit `3`, naming the flag).
-
-Use `--account <name>` on later commands to target a specific stored Account
-when you have more than one.
+Rotate or switch by running `gplay auth login` again (the new Account becomes
+active; `--activate=false` only adds it), or target one per command with
+`--account <name>`.
 
 ## Verify, then hand off
 
-Once `gplay auth doctor` is green, auth is done. Every other skill assumes the
-credential set up here; the next step is `gplay-apps`, to register a package
-(`gplay apps add <package>`) and pin it to the repo (`gplay init`).
+Once `auth doctor` is green, move to `gplay-apps`: `gplay apps add <package>`,
+then `gplay init` to pin it.
