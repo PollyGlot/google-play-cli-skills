@@ -1,6 +1,6 @@
 ---
 name: gplay-games
-description: Play Games Services achievements and leaderboards with gplay `games` (draft config only; publishing to players is Console-only). Use when creating, editing, deleting or exporting a game's achievements or leaderboards.
+description: Play Games Services achievements and leaderboards with gplay `games` (draft config only; publishing to players is Console-only; not the in-game runtime SDK). Use when creating, editing, deleting or exporting a game's achievements or leaderboards.
 ---
 
 # gplay games (Play Games Services configuration)
