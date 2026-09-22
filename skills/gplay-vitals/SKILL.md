@@ -1,32 +1,25 @@
 ---
 name: gplay-vitals
-description: Read post-launch quality signals with gplay `vitals`, crash/ANR and other rates, error reports, Play-detected anomalies; entirely read-only, on a distinct reporting scope. Use when checking crash/ANR health after a rollout, investigating a spike, pulling vitals into a CI gate, or reading clustered crash issues and stack traces.
+description: "Android vitals with gplay `vitals`: crash/ANR and other rates, error reports, Play-detected anomalies (read-only). Use when checking crash or ANR health after a rollout, investigating a spike, gating CI on vitals, or reading clustered crash issues and stack traces."
 ---
 
 # gplay vitals (post-launch quality signals)
 
-`gplay vitals` reads **Android vitals**, the post-launch quality signals you
-know from the Play Console: crash rate, ANR rate, slow cold start, slow
-rendering, excessive wakeups, low-memory kills, stuck background wakelocks, plus
-error reports and Play-detected anomalies. Shared conventions (auth, output,
-exit codes, `--package` pinning) are in `gplay-cli-usage`.
+`gplay vitals` reads Android vitals: the rate presets below, error reports, and
+Play-detected anomalies. Shared conventions are in `gplay-cli-usage`.
 
-Two things make this namespace different from the rest of gplay:
+Two things set this namespace apart:
 
-- **A distinct Google service.** Vitals is backed by the **Play Developer
-  Reporting API** (`playdeveloperreporting`), *not* the Android Publisher API.
-  Same service-account file, but a **different OAuth scope**
-  (`…/auth/playdeveloperreporting`). If the service account was invited only for
-  publishing, vitals calls fail with a 403 (exit `11`) until the reporting scope
-  is granted; that is an environment fix, not a flag.
-- **Read-only, always.** Every `vitals` command only reads metrics. There is no
-  write here, so `GPLAY_READONLY` never blocks it, and no command needs
-  `--confirm`.
+- **A distinct Google service.** Vitals is backed by the Play Developer
+  Reporting API, with its own OAuth scope. A service account invited only for
+  publishing gets a 403 (exit `11`) on every vitals call until the reporting
+  scope is granted: an environment fix, not a flag.
+- **Read-only throughout:** no `--confirm`, and `GPLAY_READONLY` never blocks
+  it.
 
 ## Preset rate commands: the fast path
 
-Each vital has an opinionated preset that needs no metric/dimension knowledge;
-it reports the set's primary metric over a **default 28-day DAILY window**:
+One preset per vital, 28-day DAILY window by default:
 
 ```bash
 gplay vitals crashes           # crash rate (on the pinned package)
@@ -38,63 +31,40 @@ gplay vitals lmk               # low-memory-kill rate
 gplay vitals stuckbgwakelock   # stuck background wakelock rate
 ```
 
-All the presets share the same knobs:
+All presets share the same knobs:
 
 ```bash
 gplay vitals crashes --by versionCode --version 123   # slice, then filter to one build
-gplay vitals crashes --by country                     # or by country / device
-gplay vitals anr --since 7d --period DAILY             # window: 28d default; HOURLY opt-in
+gplay vitals anr --since 7d --period HOURLY           # window: 28d default; HOURLY opt-in
 ```
-
-- `--by country|device|versionCode` slices the timeline (availability depends on
-  the metric set); `--version` filters to a single versionCode.
-- `--since 28d` / `--period DAILY|HOURLY|FULL_RANGE` set the window.
 
 ## `vitals query`: full control
 
-When a preset's single primary metric isn't enough, `vitals query <metric-set>`
-wraps the metric set directly and lets you pick metrics and dimensions:
+When you need more than a preset's primary metric, `vitals query <metric-set>`
+wraps the metric set directly:
 
 ```bash
 gplay vitals query crashrate --metrics crashRate,distinctUsers --dimensions versionCode
 gplay vitals query anrrate --period HOURLY --since 24h
-```
-
-`--metrics` and `--dimensions` are **validated offline** against the API schema
-embedded in the binary; an unknown name is rejected with the valid set listed
-(gplay never invents a metric or dimension). With no `--metrics`, the set's
-primary metric is used. The metric-set ids are `crashrate`, `anrrate`,
-`slowstartrate`, `slowrenderingrate`, `excessivewakeuprate`, `lmkrate`,
-`stuckbackgroundwakelockrate` (the same ones the presets wrap), plus two
-memory sets with **no preset**, reachable only through `query`:
-`anonrssandswapmemoryusage` (anonymous RSS + swap) and `bitmapmemoryusage`.
-Supported periods are per metric set: the memory sets are **DAILY only**, and
-`--period HOURLY` on one of them is refused offline (exit `2`) naming the set.
-
-```bash
 gplay vitals query bitmapmemoryusage --since 28d --dimensions versionCode
 ```
 
+`--metrics`/`--dimensions`/`--period` are validated offline against the
+embedded schema (an unknown name lists the valid set). Two memory sets have no
+preset and are `query`-only, DAILY only: `anonrssandswapmemoryusage` and
+`bitmapmemoryusage`.
+
 ## `vitals errors`: reports, issues, counts
 
-Error reporting is a sub-tree, not a single metric:
-
 ```bash
-gplay vitals errors counts      # error report counts over a window (errorCount metric set)
+gplay vitals errors counts      # error report counts over a window
 gplay vitals errors issues      # clustered issues, crashes/ANRs grouped by cause
 gplay vitals errors reports     # individual error reports (the stack traces)
 ```
 
-**Deobfuscation gotcha:** for an obfuscated (R8/ProGuard) app, error reports and
-issues are unreadable stack traces until the matching **mapping** is uploaded.
-That upload is an Android Publisher **Edit** artifact keyed by versionCode and
-lives under `releases`, **not** here:
-
-```bash
-gplay releases upload app.aab --mapping mapping.txt   # or: releases mappings upload
-```
-
-Upload the mapping under `releases`; read the symbolicated result under `vitals`.
+Obfuscated (R8/ProGuard) stacks stay unreadable until the versionCode's mapping
+is uploaded under `releases` (`--mapping` on `releases upload`, or `releases
+mappings upload`): see `gplay-release-flow`.
 
 ## `vitals anomalies`: what Play flagged itself
 
@@ -103,32 +73,18 @@ gplay vitals anomalies --since 90d
 gplay vitals anomalies --filter 'activeBetween("2026-01-01T00:00:00Z", UNBOUNDED)'
 ```
 
-Lists the metric anomalies (unexpected crash/ANR spikes, …) Play detected.
-`--since` builds an `activeBetween(...)` window for you; `--filter` passes a raw
-AIP-160 predicate and **overrides** `--since` when you need an open-ended range.
-`--limit 0` returns all (no cap); a capped list prints a `warning:` on stderr,
-so an agent reading stdout alone cannot tell a full list from a truncated one.
+`--filter` (raw AIP-160) overrides `--since` for an open-ended range;
+`--limit 0` returns all.
 
-## Freshness: an empty window is not zero
+## Freshness: an empty window means unknown
 
-The reporting service reports metrics with a lag. Every rate/query command
-prints a **freshness note to stderr** (the latest date carrying data) so an
-empty or short window is not mistaken for "zero crashes". When you ask for
-`--since 24h` right after a release, expect the window to be empty until the
-data lands; read the freshness line, don't conclude the app is clean.
+Metrics land with a lag: every rate/query command prints a freshness note to
+stderr (the latest date carrying data). A short window right after a release
+stays empty until data lands; the freshness line is the bound, and an empty
+window means unknown, not zero. `--describe` on a preset or `query` returns
+the set's latest available end time instead of a timeline: ask it before
+choosing a window.
 
-To ask "up to when is this data complete?" before choosing a window, add
-`--describe` to a rate command or to `query`: the metric set's latest
-available end time, per aggregation period, instead of a timeline.
+## CI gate
 
-```bash
-gplay vitals crashes --describe
-```
-
-## Output
-
-`--output json` mirrors the reporting API response **verbatim** (ADR-0003), a
-CI gate is usually one `jq` line over the timeline. `table`/`markdown` render
-the timeline (dates × metrics, sliced by your dimension). Remember stdout is
-data; the freshness note and warnings go to stderr and never pollute the JSON.
-
+One `jq` line over `--output json` (the API timeline verbatim).

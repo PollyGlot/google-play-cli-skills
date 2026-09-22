@@ -32,6 +32,10 @@ SKIP_SUBCOMMANDS = {"help", "completion", "version", "install-skills", "exit-cod
 # Leaf commands a skill need not name: the README owns them, or they are
 # gplay's own plumbing rather than a Play surface.
 UNCOVERED_OK = {("init",), ("edits", "status")}
+# Ceiling on any skill file. A skill that grows past it is caching --help
+# output or restating gplay-cli-usage (AGENTS.md: the --help carries the
+# flags, the skill carries the rest); the fix is a cut, not a bigger ceiling.
+MAX_WORDS = 1500
 PLACEHOLDER = re.compile(r"[<>…\[\]{}$]")
 # A bare lowercase word: what a subcommand looks like, unlike a package name,
 # a path or a flag value.
@@ -161,6 +165,18 @@ def check_no_em_dash(findings: Findings) -> None:
                 continue
             if not inside and "—" in line:
                 findings.add(path, number, "em dash in prose; use a comma, colon, semicolon or parens")
+
+
+def check_size(findings: Findings) -> None:
+    """No skill file sprawls past MAX_WORDS."""
+    for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)):
+        words = len(open(path, encoding="utf-8").read().split())
+        if words > MAX_WORDS:
+            findings.add(
+                path, 1,
+                f"{words} words, ceiling is {MAX_WORDS}: cut what --help or "
+                f"gplay-cli-usage already says",
+            )
 
 
 def invocations(path: str):
@@ -327,6 +343,7 @@ def main() -> int:
     check_frontmatter(findings)
     check_relative_links(findings)
     check_no_em_dash(findings)
+    check_size(findings)
 
     online = not args.offline
     if online:

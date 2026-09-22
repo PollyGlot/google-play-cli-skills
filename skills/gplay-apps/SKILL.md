@@ -1,36 +1,22 @@
 ---
 name: gplay-apps
-description: Manage gplay's local app registry and app-level details, and sweep the account for consistency drift with `apps audit`. Use when onboarding packages into gplay, discovering which apps a credential can reach (`apps accessible list`), listing or removing registered apps, pinning a package to the repo, reading/patching app details (default language, contact info), or gating CI on lingering drafts, empty release notes, locale drift or a missing production release.
+description: Registry, app details and drift audit with `gplay apps`. Use when registering or pinning packages, discovering which apps a credential can reach, reading or patching app details (default language, contact info), or sweeping the account for drift (lingering drafts, empty release notes, locale drift, no production release).
 ---
 
 # gplay apps (registry + app details)
 
 Two jobs: gplay's **local registry** of packages, and an app's **App details**
-record. Shared conventions (auth, `--package`, output, exit codes) live in
-`gplay-cli-usage`.
+record. Shared conventions are in `gplay-cli-usage`.
 
 ## Local registry vs. server-side discovery
 
 Two different questions, two commands:
 
-- **"What have I chosen to work on?"** → `apps list` reads gplay's **local
-  registry**: the packages you have `apps add`-ed under the active Account. The
-  classic Android Publisher API has no `apps.list` endpoint, so this working set
-  is gplay's own record, not a Play read.
-- **"What can this credential actually reach?"** → `apps accessible list` is a
-  **server-authoritative** inventory, straight from Google via the Play
-  Developer Reporting `apps.search` method (least-privilege reporting scope, no
-  local-registry fallback).
-
-The two sets do **not** necessarily coincide (ADR-0039): a credential may be
-able to `apps add` a package it cannot see here, or see org apps it does not
-drive. Use `apps accessible list` to **bootstrap**: discover package names,
-then `apps add` the ones you want to work on.
-
-Pagination is one page per call: `--page-size` / `--page-token`, and
-`--output json` passes the `SearchAccessibleAppsResponse` through verbatim
-(`nextPageToken` included, ADR-0003); table/markdown output notes the next
-`--page-token` on stderr when more apps are available.
+- `apps list`: gplay's local registry, the packages you `apps add`-ed (the
+  Publisher API has no list endpoint).
+- `apps accessible list`: what the credential can reach, server-side. The two
+  sets need not coincide: bootstrap from the second, then `apps add` what you
+  drive.
 
 ## Registering and managing packages
 
@@ -44,52 +30,17 @@ gplay apps remove com.example.app      # drop from the registry (does not touch 
 gplay init                             # pin a package to ./.gplay for this repo
 ```
 
-`apps add` takes **one or more** packages and **validates by default**
-(ADR-0006): for each it opens and immediately discards a Play Edit, a cheap
-probe that catches a typo'd package name or a missing per-app permission grant
-*now*, at registration, instead of weeks later in a CI release. Multiple
-packages are **independent units of work**: a failure on one does not stop or
-roll back the others (partial success), each gets a ✓/✗ line on stderr, and the
-exit code reflects the most serious failure (a batch carrying any non-retryable
-failure exits non-retryable, so an automated caller won't blindly retry it).
-Duplicate arguments are collapsed. Pass `--no-verify` to skip the API
-round-trip and record every package unconditionally (offline or preparatory
-registration). `gplay apps init` scaffolds the `.gplay/` pin (same idea as the
-top-level `gplay init`).
-
-`apps view` also reports the **store icon** when the default language has one
-(`[experimental]`): the icon's content **sha256** in table/markdown, and an
-`"icon"` key `{"url":..,"sha256":..}` in the JSON envelope (omitted when the
-slot is empty). The sha256 is the durable content-identity handle; the `url`
-is an **ephemeral preview link; never persist it** (fetch the bytes with
-`gplay metadata images pull`). Each run is a live read; nothing is cached.
-
 ## App details (read + write)
-
-App details is the app-global record holding `defaultLanguage` and the
-user-visible `contactEmail`, `contactPhone`, and `contactWebsite`, writable
-via the API (ADR-0012):
 
 ```bash
 gplay apps details view --package com.example.app
 gplay apps details set --contact-email support@example.com
-gplay apps details set --default-language en-US --contact-phone ""
+gplay apps details set --default-language en-US --contact-phone ""   # "" clears the field
 ```
-
-`apps details set` is a **partial patch at flag granularity**: a field you
-pass is written, a field you omit is left intact, and an explicit empty value
-**clears** a field (e.g. `--contact-phone ""` removes the number). A bare
-`set` with no field flag is refused (exit `2`) so a forgotten flag can never
-emit an empty patch. There is no `--confirm` (contact info is low-stakes and
-reversible); use `--dry-run` to preview the patch with no HTTP call.
-
-> The bare `gplay apps details` command prints help; the read is
-> `apps details view`.
 
 ## `apps audit`: a read-only consistency sweep
 
-`apps audit` (`[experimental]`) sweeps apps for drift and reports it. It is
-strictly read-only: one throwaway Edit plus two reads per app, nothing written.
+`apps audit` (`[experimental]`) sweeps apps for drift and reports it.
 
 ```bash
 gplay apps audit                                   # every app the credential can see
@@ -98,22 +49,5 @@ gplay apps audit --check lingering-drafts --check empty-release-notes
 gplay apps audit --skip-check locale-drift --output json
 ```
 
-With no argument the scope is the server-side inventory `apps accessible list`
-prints, so on a large account either name the packages or accept one Edit per
-app. The four checks have **stable IDs**, usable as CI filters:
-
-| Check | Finding |
-|---|---|
-| `lingering-drafts` | a track still holds a draft release |
-| `locale-drift` | the app's listing locales are a subset of the set seen across the audited apps (needs 2+ apps) |
-| `empty-release-notes` | a shipped release has no, or blank, release notes |
-| `no-production-release` | the production track carries no release |
-
-Read the exit code as a gate, not as success or failure: `0` means every app
-was read and nothing was found, **`70`** means the report carries findings.
-An app the sweep could not read is listed under `errors` without aborting the
-run, and in that case the ordinary API or network code wins over `70`, so a
-partial sweep never passes as clean. The JSON report is gplay-owned (`ran`,
-`findings`, `errors`, `summary`); `ran` names the apps and checks that
-actually executed, check it before trusting an empty `findings`.
-
+Exit `70` means findings (a gate, not a failure); read the report's `ran` key
+before trusting an empty `findings`.
