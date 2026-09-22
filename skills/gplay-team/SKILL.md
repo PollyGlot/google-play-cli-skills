@@ -34,13 +34,13 @@ gplay team users list
 gplay team users view alice@example.com    # one member: permissions + per-app grants
 gplay team users add alice@example.com --role release-manager
 gplay team users set bob@example.com --permissions CAN_REPLY_TO_REVIEWS_GLOBAL
-gplay team users remove carol@example.com
+gplay team users remove carol@example.com --confirm     # off-boarding is destructive: exit 3 without it
 ```
 
 `add` invites a member (`users.create`); `set` **declaratively replaces** a
-member's account-wide permissions; `remove` off-boards them. These are the
-routine tier (CI-scriptable, no confirmation gate), **except** conferring
-admin: `--role admin` (or a permission set including the all-permissions enum)
+member's account-wide permissions; `remove` off-boards them and is
+`--confirm`-gated. `add` and `set` are the routine tier (CI-scriptable, no
+confirmation gate), **except** conferring admin: `--role admin` (or a permission set including the all-permissions enum)
 requires the named **`--grant-admin`** flag. Handing out full control is never
 silent (ADR-0017).
 
@@ -56,12 +56,13 @@ lists the account and filters client-side, the same cost as
 ```bash
 gplay team grants list
 gplay team grants set alice@example.com --package com.example.app --role reviewer
-gplay team grants remove alice@example.com --package com.example.app
+gplay team grants remove alice@example.com --package com.example.app --confirm
 ```
 
 `grants set` is an **upsert** scoped to one app: gplay reads the member's
 current grants, then creates the grant if absent or updates it if present.
-`grants remove` removes access to one app while **keeping** the membership.
+`grants remove` (`--confirm`-gated) removes access to one app while **keeping**
+the membership.
 Admin-conferring grants likewise require `--grant-admin` (exit `3` if missing).
 
 ## Agent-resolvable safety gates

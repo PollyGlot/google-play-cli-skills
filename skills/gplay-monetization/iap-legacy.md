@@ -25,9 +25,3 @@ Rewrite the file in the v2 schema (`productId` instead of `sku`) and apply with
 `--migrate`. It shows as a distinct `migrate` op in the plan. Once promoted, a
 product can **never** return to `inappproducts`, rehearse with `--dry-run`
 first.
-
-## v2 write mechanics
-
-A v2 create is a `patch` with `allowMissing` (the API has no insert); offer
-writes ride the per-purchase-option batch endpoints; and purchase-option and
-offer lifecycle **states are not yet reconciled** (normalized out of the diff).

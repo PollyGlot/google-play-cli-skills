@@ -85,6 +85,23 @@ def flags(path: tuple[str, ...]) -> frozenset[str]:
     )
 
 
+@functools.lru_cache(maxsize=None)
+def required_flags(path: tuple[str, ...]) -> frozenset[str]:
+    """Flags the command refuses to run without, read from its own Flags section.
+
+    gplay marks them "(required)" or "(required: <why>)". A conditional marker
+    ("(required when the plan deletes ...)") is not an obligation on every
+    invocation, so it does not count. Global flags are never required.
+    """
+    _, text = help_text(path)
+    own = text.split("Flags:", 1)[-1].split("Global Flags:", 1)[0]
+    return frozenset(
+        re.findall(
+            r"^\s+(?:-[a-zA-Z], )?(--[a-z0-9][a-z0-9-]*)[^\n]*\(required(?:\)|:)", own, re.M
+        )
+    )
+
+
 # --- checks ----------------------------------------------------------------
 
 
@@ -214,6 +231,19 @@ def check_invocations(findings: Findings) -> int:
                     path, number,
                     f"gplay {' '.join(resolved)} does not accept {unknown}",
                 )
+            # A required flag left out of a documented invocation is a command
+            # that exits 3 or 2 the moment an agent copies it. An elided
+            # invocation ("gplay releases upload …") is a sketch, not a recipe,
+            # and --dry-run previews legitimately skip the safety flag.
+            if not PLACEHOLDER.search(segment):
+                missing = required_flags(tuple(resolved)) - used
+                if "--dry-run" in used:
+                    missing -= {"--confirm"}
+                for flag in sorted(missing):
+                    findings.add(
+                        path, number,
+                        f"gplay {' '.join(resolved)} requires {flag} (its --help says so)",
+                    )
     return checked
 
 

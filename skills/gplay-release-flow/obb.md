@@ -18,5 +18,5 @@ gplay releases expansion-files view --version-code 42 --type main
 - `view` reads an APK's expansion config (its own `fileSize`, or the
   `referencesVersion` it points at) inside a read-only Edit.
 
-All three take `--dry-run` and are refused under `GPLAY_READONLY`. Confirm
-flags with `gplay releases expansion-files <command> --help`.
+`upload` and `set` take `--dry-run` and are refused under `GPLAY_READONLY`;
+`view` is a read. Confirm flags with `gplay releases expansion-files <command> --help`.

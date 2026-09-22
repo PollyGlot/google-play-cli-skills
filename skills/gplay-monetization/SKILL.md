@@ -55,7 +55,8 @@ Consequences to internalize before running anything:
 
 | Situation | Gate | Exit without it |
 |---|---|---|
-| Plan contains any delete (product or offer) | `--confirm` | `3` |
+| Plan contains any delete (product, base plan or offer) | `--confirm` | `3` |
+| `iap apply` cancels a pre-order offer (irreversible) | `--confirm` | `3` |
 | `iap apply` promotes a live legacy product to v2 | `--migrate` | `3` |
 | `subscriptions prices migrate` (reprices live subscribers) | `--confirm` | `3` |
 | Creates, patches, state changes | *none*, they run directly | n/a |
@@ -80,8 +81,12 @@ gplay subscriptions apply --confirm                   # …when the plan also de
 - **Base plans ride the parent patch.** Base plan config (billing type,
   per-territory `regionalConfigs` prices) is declared inline under `basePlans`
   and patched with the subscription; the API has no create/patch on the
-  sub-resource. Its endpoints only manage *state* and subscriber price
-  migration.
+  sub-resource. Its endpoints only manage *state*, subscriber price
+  migration, and deletion.
+- **A base plan dropped from the file is a delete, and only a DRAFT one
+  deletes.** A plan that was ever published comes back as diagnostic code
+  `BASE_PLAN_NOT_DRAFT`, after the rest of the plan has run. Retire it in two
+  applies: `state: INACTIVE` first, then drop it from the file.
 - **Offers are embedded but real.** `pull` nests each offer under
   `basePlans[].offers`, a **file construct the API resource does not carry**.
   `apply` splits them back out and reconciles them through the offers
@@ -150,6 +155,12 @@ is its shape**; no gplay-invented marker:
 | `sku` | legacy `inappproducts` |
 | `productId` | v2 `onetimeproducts` |
 
+**Purchase options and offers carry a `state` too**, the subscriptions stance
+(state verbs, omit the field to leave it unmanaged): a purchase option is
+`ACTIVE` or `INACTIVE`; an offer is `ACTIVE`, `INACTIVE` (discounted offer)
+or `CANCELLED` (pre-order offer, its pending orders cancelled too: a one-way
+door, gated in the table above).
+
 **Legacy is inert**: gplay never creates, edits or deletes a legacy product,
 the only gesture is the **one-way promotion** to v2 (rewrite the file with
 `productId` and apply with `--migrate`; rehearse with `--dry-run` first).
@@ -175,7 +186,7 @@ gplay iap apply --dry-run --output json
 ADR-0003 exception, like `metadata apply`, `[experimental]` until it
 graduates: `{package, dryRun, changes[], summary{…}, requires[]}`, where each
 change carries `op` (`create`/`patch`/`delete`/`activate`/`deactivate`, plus
-`migrate` on `iap`) and its identity. `pull --output json` is the API
+`migrate` and `cancel` on `iap`) and its identity. `pull --output json` is the API
 pass-through (the merged `ListSubscriptionsResponse`, or the composite
 `{"oneTimeProducts":[…],"inappproduct":[…]}`), but the *files* are the real
 output there.
