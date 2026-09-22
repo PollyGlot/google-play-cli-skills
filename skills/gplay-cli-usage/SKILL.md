@@ -207,6 +207,8 @@ gplay edits begin            # opens an Edit, pins its id to .gplay/edit-<packag
 gplay metadata apply …       # these writes detect the pin and reuse the open Edit
 gplay releases upload … --release-notes-dir ./notes
 gplay edits status           # local read (no auth/network): shows the open edit, or none
+gplay edits status --live    # …plus the server's view: a pin the server forgot means `discard`
+gplay edits validate         # Google's commit-time checks, the Edit stays open
 gplay edits commit           # publish everything at once, and clear the pin
 # gplay edits discard        # …or abandon the whole batch, clearing the pin
 ```
@@ -217,7 +219,9 @@ mode there is **no** auto-commit and **no** auto-discard; the lifecycle is
 yours until you `commit` or `discard`. Notes: a project (`gplay init`) is
 required since the pin lives under `.gplay/`; opening a second Edit while one is
 pinned is refused (**exit 60**); if `commit` fails (e.g. a validation error) the
-Edit stays open and the pin remains, fix and re-run, or `discard`.
+Edit stays open and the pin remains, fix and re-run, or `discard`. `validate`
+runs those same checks without committing: the gate to put before a `commit`
+that a human or a later job will trigger.
 
 (A few surfaces sit *outside* the Edit model on purpose: `compliance
 datasafety`, `device-tiers`, `recovery`, `orders`, `vitals`, `games`,

@@ -111,7 +111,7 @@ API, the only channel beyond the 7-day API window. Points to know:
   appears **once** (latest update wins), and a month with no report is skipped
   with a WARN. `--month` and `--from`/`--to` are **mutually exclusive**.
 - `--output json` emits the parsed rows as `{"reviews":[...]}` with stable
-  lowerCamel field names (a documented ADR-0003 deviation: the upstream is a
+  lowerCamel field names (a documented ADR-0037 deviation: the upstream is a
   CSV file, not a JSON API body). Default table columns are
   `date,stars,locale,version,title,summary`, override with `--columns`.
 

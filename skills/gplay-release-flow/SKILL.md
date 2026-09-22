@@ -139,6 +139,17 @@ and shows every release on it: draft, inProgress, halted, completed. For a
 cross-track or whole-track view use the `gplay-tracks` skill (`gplay tracks
 list` / `gplay tracks view`).
 
+For the builds themselves (every APK and App Bundle attached to the app,
+on a track or not), `artifacts` (`[experimental]`) lists them with the
+versionCode `promote` and `rollout` accept:
+
+```bash
+gplay releases artifacts list --kind bundle
+```
+
+Under an explicit Edit (`gplay edits begin`) the listing reads inside that
+Edit, so an upload not yet committed already shows up.
+
 ## Generated APKs: list + download what Play signs from your AAB
 
 After an upload, Play **generates and signs** the APKs it actually serves to

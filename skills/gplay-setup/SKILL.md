@@ -24,21 +24,22 @@ key one of three ways (resolution order in `gplay-cli-usage`):
 ## First-run flow
 
 ```bash
-# 1. Register the service account as the active Account.
-gplay auth login --service-account ./service_account.json
+# 1. Register the service account as the active Account. --developer-id records
+#    the Play Console developer account id that `gplay team` and `customapps` address.
+gplay auth login --service-account ./service_account.json --developer-id <id>
 
 # 2. Confirm what gplay will use, and where the credential lives.
 gplay auth status
 
-# 3. Run ordered diagnostics (credential valid? scopes? developer id?).
-gplay auth doctor
+# 3. Ordered diagnostics; --package adds the "is the SA invited on this app" round-trip.
+gplay auth doctor --package com.example.app
 ```
 
 `auth status` prints the active Account, the keystore backend, and the
 credential's location. `auth doctor` runs ordered checks and is the first
 thing to reach for when an authenticated command fails; it pinpoints whether
 the problem is a bad key (exit `10`) or a service account that is valid but
-not invited on the app/account (exit `11`).
+not invited on the app (exit `11`, only tested when `--package` is passed).
 
 ## Managing stored accounts
 

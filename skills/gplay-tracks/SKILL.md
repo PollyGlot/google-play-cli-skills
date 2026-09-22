@@ -17,8 +17,8 @@ gplay tracks list --package com.example.app          # every track on the app
 gplay tracks view --track production                 # one track's full state
 ```
 
-`tracks view` answers "is anything wrong on this track right now?": the latest
-release, its status, and rollout fraction.
+`tracks view` answers "is anything wrong on this track right now?": every
+release coexisting on the track, one row each, with status and rollout fraction.
 
 ## Create a closed track
 

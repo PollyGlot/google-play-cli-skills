@@ -117,6 +117,14 @@ empty or short window is not mistaken for "zero crashes". When you ask for
 `--since 24h` right after a release, expect the window to be empty until the
 data lands; read the freshness line, don't conclude the app is clean.
 
+To ask "up to when is this data complete?" before choosing a window, add
+`--describe` to a rate command or to `query`: the metric set's latest
+available end time, per aggregation period, instead of a timeline.
+
+```bash
+gplay vitals crashes --describe
+```
+
 ## Output
 
 `--output json` mirrors the reporting API response **verbatim** (ADR-0003), a
