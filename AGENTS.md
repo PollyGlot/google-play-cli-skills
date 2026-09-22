@@ -22,5 +22,12 @@ distribués via [skills.sh](https://skills.sh/PollyGlot/google-play-cli-skills).
   typée `fix` pour qu'une release la livre.
 - Rédaction en anglais, instructions actionnables pour un agent, suivre
   le skill global `writing-for-agents`.
+- **Le `--help` porte les flags, la skill porte le reste.** Une skill ne
+  recopie pas ce que `gplay <cmd> --help` imprime (flags, forme de sortie,
+  codes de sortie, gates `--confirm`/`--dry-run`/`GPLAY_READONLY`, dont la
+  mécanique vit une seule fois dans `gplay-cli-usage`). Elle porte l'ordre
+  des commandes, les pièges qu'aucun `--help` unitaire ne dit, et les
+  branches qui la déclenchent. Chaque commande reste nommée une fois dans un
+  bloc bash : la barrière de couverture l'exige.
 - Pas de tiret cadratin dans la prose des skills, la barrière le refuse. Les
   blocs de code en sont exemptés : ils citent ce que le binaire imprime.
