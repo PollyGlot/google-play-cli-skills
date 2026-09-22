@@ -1,4 +1,4 @@
-# Legacy `inappproducts`: the v2 ∪ legacy union, refusals, and promotion
+# Legacy `inappproducts`: the v2 ∪ legacy union and its refusals
 
 ## Why `iap pull` reads two surfaces
 
@@ -18,10 +18,3 @@ self-explaining usage error:
 - editing a legacy file in place → rewrite it as v2 and `--migrate`
 - omitting a legacy file → gplay won't delete legacy; restore the file with
   `pull` or remove the product in the Console
-
-## Promotion is the only gesture, and it's one-way
-
-Rewrite the file in the v2 schema (`productId` instead of `sku`) and apply with
-`--migrate`. It shows as a distinct `migrate` op in the plan. Once promoted, a
-product can **never** return to `inappproducts`, rehearse with `--dry-run`
-first.
