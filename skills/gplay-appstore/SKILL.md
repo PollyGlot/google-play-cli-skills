@@ -1,6 +1,6 @@
 ---
 name: gplay-appstore
-description: Alternative app store operations with gplay `appstore`. Use when operating a third-party Android app store, mirroring Play's catalog export or its update-event feed, or taking an app the store hosts through Google's review path (create, upload, update, publish-status).
+description: Alternative app store operations with gplay `appstore`. Use when operating a third-party Android app store, mirroring Play's catalog or its update-event feed, submitting an app the store hosts to Google's review, or withdrawing it.
 ---
 
 # gplay appstore (alternative app store operations)
@@ -9,8 +9,7 @@ description: Alternative app store operations with gplay `appstore`. Use when op
 the catalog that store mirrors from Play, and the apps it hosts and must send to
 Google for review. Publishing your own app to Google Play is `gplay-release-flow`.
 
-Shared conventions (auth, output, exit codes, `--dry-run`/`--confirm`, the
-`[experimental]` contract) are in `gplay-cli-usage`. Read the current flags from
+Shared conventions are in `gplay-cli-usage`. Read the current flags from
 `gplay appstore <command> --help`: it is long and complete, and this skill
 carries the order the commands go in and the traps between them.
 
@@ -24,10 +23,7 @@ carries the order the commands go in and the traps between them.
 Swapping the two is the standard failure here. The catalog reads take the
 **caller** only, and address the Play app as a positional argument: they ignore
 the repo pin, so a resolved `.gplay/config.json` still leaves `--store-package`
-required. A missing caller is a usage error (**exit 2**) before any HTTP call.
-
-A 403 (**exit 11**) on any of these commands means the caller is not enrolled
-for alternative distribution; the message names the enrollment.
+required.
 
 ## Mirror Play's catalog
 
@@ -41,15 +37,7 @@ gplay appstore catalog events list \
 `catalog events list` is the **incremental sync** feed, and the reason to script
 this surface at all: each event is a `MODIFICATION` (re-fetch that app with
 `catalog view`) or a `DELETION` (delist it). Persist each run's `--end-time` and
-feed it back as the next run's `--start-time`; both bounds are required, the
-range is `[start, end)`, and an end at or before the start is **exit 2**.
-
-Pagination is one page per invocation, and the page token is only valid against
-**identical** parameters: carry `--start-time`, `--end-time` and `--page-size`
-unchanged into every follow-up call with `--page-token`. In table output the
-next token arrives on stderr, in `--output json` as `nextPageToken`.
-
-An app not eligible for catalog inclusion fails with **exit 30**.
+feed it back as the next run's `--start-time`.
 
 ## Take a hosted app through review
 
@@ -74,23 +62,11 @@ gplay appstore publish-status unpublished --package com.example.app
 gplay appstore publish-status published   --package com.example.app
 ```
 
-**`create` is permanent.** The API exposes no delete, so the record outlives any
-mistake; only its publish status can still change. A second `create` is a
-conflict (**exit 60**), safe to retry after a transport failure, worth guarding
-in a script that runs more than once.
+Two traps span the path: upload ids cannot be listed back, so store them the
+moment they print; `create` has no delete and a second run is exit 60, so a
+script that runs twice guards it.
 
-**Uploads are inert.** An APK, image or document sits unused until an `update`
-cites its id, which is why no upload needs `--confirm`. Store the ids the moment
-they print: re-uploading gigabytes for a metadata change buys nothing, and there
-is no endpoint to list them back.
-
-**`update` is the one-way door.** It submits to Google review immediately, with
-no staging step and no recall, so `--confirm` is mandatory (**exit 3** without
-it) and `CI=true` never auto-confirms. Rehearse with `--dry-run`, which
-validates the file and resolves the target with zero HTTP calls. The request
-body shape and its resolution rules are in
-[`update-body.md`](update-body.md); read it before writing the file.
-
-**`publish-status` is reversible in both directions**, so it carries no
-`--confirm`. Google treats an app as published once `update` succeeds; this
-command exists to take one back out of the store, and later to restore it.
+The `update` body is one JSON file whose shape `gplay appstore update --help`
+prints. Keep it in version control: the API answers with no fields and offers
+no read-back, so the file is the only record of what was submitted and the
+base for the next one.
