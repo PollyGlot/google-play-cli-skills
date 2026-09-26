@@ -99,7 +99,7 @@ mutates nothing.
 # Reprice EXISTING subscribers, money-moving, one base plan per call:
 gplay subscriptions prices migrate \
   --product premium --base-plan monthly \
-  --region FR --region DE \
+  --regions FR,DE \
   --oldest 2026-01-01T00:00:00Z \
   --price-increase-type opt-in \
   --dry-run                                  # offline preview, unlike apply --dry-run
