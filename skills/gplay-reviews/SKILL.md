@@ -47,7 +47,7 @@ gplay reviews view <reviewId> --output markdown   # record + thread as blockquot
 ```bash
 gplay reviews history --package com.example.app                  # latest month present
 gplay reviews history --month 2026-05                            # a specific month
-gplay reviews history --from 2026-01 --to 2026-06                # merge a range of months
+gplay reviews history --since 2026-01 --until 2026-06            # merge a range of months
 gplay reviews history --columns date,stars,device,reply --output json   # parsed CSV rows, not an API body
 ```
 

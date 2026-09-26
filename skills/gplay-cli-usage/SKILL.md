@@ -65,10 +65,10 @@ for `--output json`: read commands pass the API payload through (ADR-0003),
 write commands return the request/diff body, so a CI gate is one `jq` line.
 The offline commands (`team permissions`, `schema`) emit gplay-owned JSON.
 
-Where a listing pages, it takes `--page-size` (`--max-results` on `games`)
-and `--page-token`, one page per call: the next token is `nextPageToken` in
-JSON, and a stderr note in table output. `reviews list` and `vitals anomalies`
-auto-paginate behind `--limit` instead.
+Where a listing pages, it takes `--page-size` and `--page-token`, one page
+per call: the next token is `nextPageToken` in JSON, and a stderr note in
+table output. `reviews list` and `vitals anomalies` auto-paginate behind
+`--limit` instead.
 
 **stdout is data, stderr is logs.** Parse stdout; warnings, progress, and
 `-v/--verbose` flow steps go to stderr and never pollute the JSON.
@@ -117,8 +117,12 @@ Under `--output json` a failure carries a stable envelope on **stdout**
 ```
 
 `code` splits causes sharing an exit code (`60`: open Edit, expired Edit, rate
-limit); branch on `retryable`. Catalog: `gplay exit-codes`, or
-`gplay schema --codes --output json` for a machine.
+limit); branch on `retryable`. What the failed call targeted is
+`resource: {kind, id}` (`kind`: `package`, `app`, `developerAccount`,
+`gamesApplication`, `achievement`, `leaderboard`, `bucket`); read the target
+there, since `package` is present only when `resource.kind` is `package`.
+Catalog: `gplay exit-codes`, or `gplay schema --codes --output json` for a
+machine.
 
 ## Safety: `--dry-run` everywhere, `--confirm` for live writes
 
