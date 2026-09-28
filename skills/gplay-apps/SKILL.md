@@ -27,7 +27,7 @@ gplay apps add com.a com.b com.c       # register several: independent, partial 
 gplay apps list                        # list packages in the local registry
 gplay apps view --package com.example.app   # default language, title, contact email, icon
 gplay apps remove com.example.app      # drop from the registry (does not touch Play)
-gplay init                             # pin a package to ./.gplay for this repo
+gplay init --package com.example.app   # pin a package to ./.gplay for this repo
 ```
 
 ## App details (read + write)

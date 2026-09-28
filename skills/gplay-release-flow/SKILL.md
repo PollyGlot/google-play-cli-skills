@@ -73,10 +73,10 @@ gplay releases promote --from beta --to production --staged 0.1 --confirm
 These four act on the **latest** release of `--track`.
 
 ```bash
-gplay releases rollout  --track production --to 0.25 --confirm   # set fraction → inProgress
-gplay releases halt     --track production --confirm             # freeze at current fraction
-gplay releases resume   --track production --confirm             # un-freeze, continue
-gplay releases complete --track production --confirm             # ramp to 1.0 → completed
+gplay releases rollout  --track production --staged 0.25 --confirm   # set fraction → inProgress
+gplay releases halt     --track production --confirm                 # freeze at current fraction
+gplay releases resume   --track production --confirm                 # un-freeze, continue
+gplay releases complete --track production --confirm                 # ramp to 1.0 → completed
 ```
 
 ## Inspect what is on a track
@@ -93,7 +93,7 @@ APK/AAB attached to the app with the versionCode `promote` and `rollout`
 accept:
 
 ```bash
-gplay releases artifacts list --kind bundle
+gplay releases artifacts list --format bundle
 ```
 
 ## Generated APKs (what Play signs from your AAB)

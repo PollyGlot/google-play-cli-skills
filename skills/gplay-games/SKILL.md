@@ -13,7 +13,7 @@ The whole namespace is `[experimental]`.
 
 Play Games resources are keyed by the numeric Play Games application ID, not
 the package: `--application-id` on `list`/`create`, the resource id alone on
-`view`/`update`/`delete`. The `.gplay/config.json` pin plays no part here.
+`view`/`set`/`remove`. The `.gplay/config.json` pin plays no part here.
 
 ```bash
 gplay games achievements list --application-id 1234567890
@@ -22,7 +22,7 @@ gplay games leaderboards list --application-id 1234567890
 
 ## Writes land in the draft; publishing is Console-only
 
-Every write edits the draft. There is no publish method: `create`/`update`
+Every write edits the draft. There is no publish method: `create`/`set`
 stage the change, then a human publishes it in the Play Console. Say so when
 handing off.
 
@@ -35,7 +35,7 @@ gplay games achievements create --application-id 123 \
   --type STANDARD --initial-state REVEALED --point-value 10
 ```
 
-Field flags, or `--from-json` for a full body: the round-trip of
+Field flags, or `--file` for a full body: the round-trip of
 `view --output json`, and the way to set several locales at once.
 
 ## Leaderboards
@@ -45,26 +45,26 @@ gplay games leaderboards view <leaderboardId> --output json     # read one
 gplay games leaderboards create --application-id 123 \
   --name "High Scores" --score-order LARGER_IS_BETTER \
   --score-min 0 --score-max 1000000
-gplay games leaderboards update <leaderboardId> --name "Top Scores"
+gplay games leaderboards set <leaderboardId> --name "Top Scores"
 ```
 
-## `update` replaces: fetch, edit, resend
+## `set` replaces: fetch, edit, resend
 
-`update <id>` is a full PUT replace: fetch, edit, resend with `--from-json`.
+`set <id>` is a full PUT replace: fetch, edit, resend with `--file`.
 The field flags alone are fine for a one-field change.
 
 ```bash
 gplay games achievements view <id> --output json > ach.json
 # edit ach.json …
-gplay games achievements update <id> --from-json ach.json
+gplay games achievements set <id> --file ach.json
 ```
 
 ## Safety
 
-`create`/`update` are routine draft writes (`--dry-run` previews the request
-body). `delete` is irreversible and sits on the `--confirm` tier:
+`create`/`set` are routine draft writes (`--dry-run` previews the request
+body). `remove` is irreversible and sits on the `--confirm` tier:
 
 ```bash
-gplay games achievements delete <achievementId> --confirm
-gplay games leaderboards delete <leaderboardId> --confirm
+gplay games achievements remove <achievementId> --confirm
+gplay games leaderboards remove <leaderboardId> --confirm
 ```

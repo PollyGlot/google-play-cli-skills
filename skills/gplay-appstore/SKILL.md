@@ -31,13 +31,13 @@ required.
 gplay appstore catalog view com.example.app --store-package com.mystore.app
 
 gplay appstore catalog events list \
-  --start-time 2026-07-01T00:00:00Z --end-time 2026-07-08T00:00:00Z
+  --since 2026-07-01T00:00:00Z --until 2026-07-08T00:00:00Z
 ```
 
 `catalog events list` is the **incremental sync** feed, and the reason to script
 this surface at all: each event is a `MODIFICATION` (re-fetch that app with
-`catalog view`) or a `DELETION` (delist it). Persist each run's `--end-time` and
-feed it back as the next run's `--start-time`.
+`catalog view`) or a `DELETION` (delist it). Persist each run's `--until` and
+feed it back as the next run's `--since`.
 
 ## Take a hosted app through review
 
@@ -49,24 +49,24 @@ until its record exists.
 gplay appstore create --package com.example.app --store-package com.mystore.app
 
 # 2. Upload each artifact; the printed id is the point of the call.
-gplay appstore upload apk    ./base.apk    --package com.example.app   # → apkId
-gplay appstore upload image  ./icon.png    --package com.example.app   # → imageId
-gplay appstore upload policy ./privacy.pdf --package com.example.app   # → fileId
+gplay appstore apk upload    ./base.apk    --package com.example.app   # → apkId
+gplay appstore image upload  ./icon.png    --package com.example.app   # → imageId
+gplay appstore policy upload ./privacy.pdf --package com.example.app   # → fileId
 
 # 3. Assemble those ids into one JSON body and submit to review.
-gplay appstore update --file ./hosted-app.json --dry-run     # rehearse, zero HTTP
-gplay appstore update --file ./hosted-app.json --confirm     # irrevocable
+gplay appstore submit --file ./hosted-app.json --dry-run     # rehearse, zero HTTP
+gplay appstore submit --file ./hosted-app.json --confirm     # irrevocable
 
 # 4. Later, to withdraw the app from the store, or put it back:
-gplay appstore publish-status unpublished --package com.example.app
-gplay appstore publish-status published   --package com.example.app
+gplay appstore publish-status set unpublished --package com.example.app
+gplay appstore publish-status set published   --package com.example.app
 ```
 
 Two traps span the path: upload ids cannot be listed back, so store them the
 moment they print; `create` has no delete and a second run is exit 60, so a
 script that runs twice guards it.
 
-The `update` body is one JSON file whose shape `gplay appstore update --help`
+The `submit` body is one JSON file whose shape `gplay appstore submit --help`
 prints. Keep it in version control: the API answers with no fields and offers
 no read-back, so the file is the only record of what was submitted and the
 base for the next one.
