@@ -38,6 +38,9 @@ gplay vitals crashes --by versionCode --version-code 123   # slice, then filter 
 gplay vitals anr --since 7d --period HOURLY                # window: 28d default; HOURLY opt-in
 ```
 
+`--version-code` takes the codes `gplay vitals releases` lists (the tracks and
+serving releases the Reporting service knows), `[experimental]`.
+
 ## `vitals query`: full control
 
 When you need more than a preset's primary metric, `vitals query <metric-set>`

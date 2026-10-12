@@ -33,6 +33,7 @@ methods, REST paths, types, enums. `[experimental]`; flags in
 ```bash
 gplay schema edits.tracks.update    # a method's request/response, one hop deep
 gplay schema Track                  # a type's fields, types, enums
+gplay schema --command "releases upload"   # the API methods a gplay command calls
 ```
 
 ## Which credential
