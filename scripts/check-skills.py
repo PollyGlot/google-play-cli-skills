@@ -27,6 +27,8 @@ import sys
 
 GPLAY = os.environ.get("GPLAY_BIN", "gplay")
 SKILLS_GLOB = "skills/**/*.md"
+# Human-facing prose held to the same style rules as the skills.
+PROSE_FILES = ["README.md", ".github/SECURITY.md"]
 # Commands whose --help is not a gplay surface a skill would document.
 SKIP_SUBCOMMANDS = {"help", "completion", "version", "install-skills", "exit-codes"}
 # Leaf commands a skill need not name: the README owns them, or they are
@@ -157,7 +159,7 @@ def check_no_em_dash(findings: Findings) -> None:
     emit an em dash (see the trackhint message). Rewriting a quote would
     document output that does not exist.
     """
-    for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)):
+    for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)) + PROSE_FILES:
         inside = False
         for number, line in enumerate(open(path, encoding="utf-8"), start=1):
             if line.startswith("```"):
@@ -165,6 +167,23 @@ def check_no_em_dash(findings: Findings) -> None:
                 continue
             if not inside and "—" in line:
                 findings.add(path, number, "em dash in prose; use a comma, colon, semicolon or parens")
+
+
+def check_catalogue(findings: Findings) -> None:
+    """The README catalogue links exactly the skills the repo ships.
+
+    A new skill missing from the table is invisible on GitHub and skills.sh,
+    and a row left behind by a rename points at nothing.
+    """
+    path = "README.md"
+    text = open(path, encoding="utf-8").read()
+    # Only table rows count: a link in a paragraph is not a catalogue entry.
+    listed = set(re.findall(r"^\| \[`[a-z0-9-]+`\]\(skills/([a-z0-9-]+)/SKILL\.md\)", text, re.M))
+    shipped = {os.path.basename(os.path.dirname(p)) for p in glob.glob("skills/*/SKILL.md")}
+    for name in sorted(shipped - listed):
+        findings.add(path, 1, f"catalogue has no row for skills/{name}")
+    for name in sorted(listed - shipped):
+        findings.add(path, 1, f"catalogue links skills/{name}, which does not exist")
 
 
 def check_size(findings: Findings) -> None:
@@ -343,6 +362,7 @@ def main() -> int:
     check_frontmatter(findings)
     check_relative_links(findings)
     check_no_em_dash(findings)
+    check_catalogue(findings)
     check_size(findings)
 
     online = not args.offline
