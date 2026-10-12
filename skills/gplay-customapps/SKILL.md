@@ -28,6 +28,10 @@ Irreversible (the API has no delete and no read): `--confirm` gated,
 rehearse with `--dry-run` first. Capture `packageName` from `--output json`:
 there is no read endpoint to look it up later.
 
+A private app that serves its APK from the organisation's own host ships
+through `gplay releases upload --externally-hosted <file.json>`
+(`[experimental]`, see `gplay-release-flow`).
+
 ## Capability + enrollment
 
 A 403 names what is missing: managed Google Play enrollment on the account,

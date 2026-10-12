@@ -29,9 +29,19 @@ Pick `--revoke` before running: it is the only choice the command leaves to
 you (money back and access kept, or money back and entitlement revoked, a
 subscription's future billing stopping too). One order per call.
 
+## Voided purchases: `orders voided list` (reconciliation feed)
+
+```bash
+gplay orders voided list --since 7d     # refunds, chargebacks, revocations; 30d max
+```
+
+`[experimental]`. Match each order ID against your records to revoke an
+entitlement or book a refund; `--since` filters on when Google recorded the
+void, not on the voided time shown.
+
 ## Capabilities
 
 Money capabilities live in no Role bundle (`viewer` … `admin`): grant them
-explicitly (`gplay-team`). `orders view` needs `CAN_VIEW_FINANCIAL_DATA`,
+explicitly (`gplay-team`). `orders view` and `orders voided list` need `CAN_VIEW_FINANCIAL_DATA`,
 `orders refund` needs `CAN_MANAGE_ORDERS`; a 403 (exit `11`) names the
 missing one.

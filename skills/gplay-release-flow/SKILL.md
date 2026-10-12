@@ -49,6 +49,23 @@ restarting from zero. Automatic, no flag.
 `upload` also takes a legacy `.apk` (`[experimental]`, same pipeline;
 `--format apk|bundle` overrides an ambiguous extension).
 
+### Several artifacts, one release
+
+```bash
+gplay releases upload phone.aab wear.aab --track beta --retain-version-code 41
+```
+
+Several positional artifacts (per-ABI APKs, a phone plus a Wear bundle) land in
+one Edit and one release listing every versionCode, all or nothing: any failure
+discards the Edit. `--retain-version-code` keeps an already-uploaded build
+serving alongside them; gplay passes it unchecked, so a wrong code fails with
+Google's error. `--mapping` takes a single artifact: for a multi-artifact
+release, attach mappings afterwards with `releases mappings upload`.
+
+`--externally-hosted <file.json>` (`[experimental]`) registers an APK served
+from your own host instead of uploading one: Managed Play private apps only
+(see `gplay-customapps`), shape in `gplay schema ExternallyHostedApk`.
+
 ### Local preflight
 
 Before any byte leaves, gplay checks the artifact by structure (container
