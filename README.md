@@ -54,9 +54,11 @@ assumes. Each of the others covers one `gplay` command group.
 
 ## Coverage
 
-Every `gplay` command is documented by at least one skill: the check below
-walks the binary's command tree and fails on any command no skill names, so a
-gplay release that adds a command group turns CI red until a skill covers it.
+Every `gplay` command that operates on Play is named by at least one skill.
+The check below walks the binary's command tree and fails on any such command
+no skill names, so a gplay release that adds a command group turns CI red
+until a skill covers it. Local plumbing (`completion`, `version`,
+`install-skills`, `exit-codes`) is exempt.
 Commands marked `[experimental]` in `gplay --help` sit outside gplay's
 stability contract, and `gplay-cli-usage` says what that means for CI.
 

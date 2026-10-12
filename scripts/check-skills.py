@@ -177,7 +177,8 @@ def check_catalogue(findings: Findings) -> None:
     """
     path = "README.md"
     text = open(path, encoding="utf-8").read()
-    listed = set(re.findall(r"\]\(skills/([a-z0-9-]+)/SKILL\.md\)", text))
+    # Only table rows count: a link in a paragraph is not a catalogue entry.
+    listed = set(re.findall(r"^\| \[`[a-z0-9-]+`\]\(skills/([a-z0-9-]+)/SKILL\.md\)", text, re.M))
     shipped = {os.path.basename(os.path.dirname(p)) for p in glob.glob("skills/*/SKILL.md")}
     for name in sorted(shipped - listed):
         findings.add(path, 1, f"catalogue has no row for skills/{name}")
