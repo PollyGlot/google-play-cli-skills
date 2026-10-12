@@ -2,15 +2,15 @@
 
 [![skills.sh](https://skills.sh/b/PollyGlot/google-play-cli-skills)](https://skills.sh/PollyGlot/google-play-cli-skills)
 
-Agent skills for [**gplay**](https://github.com/PollyGlot/google-play-cli) — a
-fast, single-binary CLI for the Google Play Developer API. Each skill is a
-`SKILL.md` of plain-Markdown instructions that teaches an AI agent (Claude Code
-and friends) how to drive `gplay` at the prompt: how to think about the release
-lifecycle, which command shapes to reach for, and the gotchas the `--help`
-text alone won't warn you about.
+Agent skills for [**gplay**](https://github.com/PollyGlot/google-play-cli), a
+single-binary CLI for the Google Play Developer API. Each skill is a `SKILL.md`
+that tells an AI agent (Claude Code, or any agent that reads skills) how to
+drive `gplay`: which command to run for a task, in what order, and what the
+`--help` text leaves out, such as which commands are irreversible or which
+Play features have no API at all.
 
-> These skills drive the `gplay` CLI; they do not replace it. Install `gplay`
-> first — see the [CLI repo](https://github.com/PollyGlot/google-play-cli).
+> The skills drive the `gplay` CLI and do not replace it. Install `gplay`
+> first, from the [CLI repo](https://github.com/PollyGlot/google-play-cli).
 
 ## Install
 
@@ -18,81 +18,76 @@ text alone won't warn you about.
 npx skills add PollyGlot/google-play-cli-skills
 ```
 
-This pulls the skills below into your agent's skill directory. After
-installing, an agent can invoke a skill by name (e.g. *gplay-release-flow*)
-whenever the task matches its "Use when".
+This copies the skills below into your agent's skill directory, from the
+current `main`. An agent then loads a skill by name (e.g. *gplay-release-flow*)
+when the task matches its "Use when" clause.
+
+`gplay install-skills` installs the same skills without Node. It fetches a
+commit pinned inside the binary, so a given gplay version always installs the
+same files, which can lag behind `main`.
 
 ## Catalogue
 
-Start with **gplay-cli-usage** — it holds the cross-cutting conventions the
-other skills build on. The rest map one-to-one to a `gplay` surface.
+Start with **gplay-cli-usage**: it holds the conventions every other skill
+assumes. Each of the others covers one `gplay` command group.
 
 | Skill | Use when |
 |---|---|
-| [`gplay-cli-usage`](skills/gplay-cli-usage/SKILL.md) | Running or designing any gplay command — credential/account resolution, `--package` pinning, output formats, semantic exit codes, `--dry-run`/`--confirm`, the implicit Edit lifecycle. The foundation the other skills reference. |
-| [`gplay-setup`](skills/gplay-setup/SKILL.md) | Setting up gplay auth for the first time, switching or rotating service accounts, or diagnosing an auth failure (`auth login` / `status` / `doctor` / `list` / `logout`). |
-| [`gplay-apps`](skills/gplay-apps/SKILL.md) | Onboarding one or more packages into gplay's local registry, discovering which apps a credential can reach (`apps accessible list`), listing/viewing/removing registered apps, pinning one to the repo, or editing app details (default language, contact info). |
-| [`gplay-release-flow`](skills/gplay-release-flow/SKILL.md) | Uploading a build (AAB, or a legacy APK; large artifacts upload resumably), cutting a release, promoting a build up the track ladder (internal → alpha → beta → production), running or steering a staged production rollout (rollout / halt / resume / complete), inspecting which releases sit on a track, downloading the APKs Play generates, attaching ProGuard/R8 mappings for vitals symbolication, sharing a private Internal App Sharing build, or managing legacy OBB expansion files. |
-| [`gplay-tracks`](skills/gplay-tracks/SKILL.md) | Inspecting tracks, creating a closed-testing track before an upload, auditing country availability (read-only), or setting the Google Groups authorized to test a closed track. |
-| [`gplay-reviews`](skills/gplay-reviews/SKILL.md) | Triaging recent reviews, filtering by star rating, viewing one review's full user↔developer thread, replying to a user, or bulk-answering reviews from a TSV in CI (the API exposes the last 7 days), or reading the full review history from the monthly GCS CSV reports (one month or a `--since`/`--until` range) with `reviews history`. |
-| [`gplay-metadata-sync`](skills/gplay-metadata-sync/SKILL.md) | Editing store listings or screenshots, migrating listing text into version control, localizing a listing, or gating a listing change in CI before it goes live. |
-| [`gplay-monetization`](skills/gplay-monetization/SKILL.md) | Putting subscriptions or one-time products under version control, editing a product's prices / offers / listings, reviewing catalog drift in CI, promoting a legacy `inappproducts` item to the v2 model, or migrating live subscribers to a new price. Declarative `pull` → edit → `apply`, but **mirror** semantics (a live product with no file is a delete) — not the additive stance of `metadata`. |
-| [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV (the only Play compliance surface with an API). |
-| [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer-account member, granting or adjusting per-app access, or looking up which permission alias / role bundle to use. |
-| [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a managed Google Play private (organisation-scoped) app from an AAB/APK — the one Play API path that creates an app record. Irreversible, so `--confirm`-gated and capability-gated. |
-| [`gplay-vitals`](skills/gplay-vitals/SKILL.md) | Reading post-launch quality signals — crash / ANR / slow-start / rendering / wakeup / LMK rates, error reports and clustered issues, and Play-detected anomalies. Read-only, on the distinct Play Developer Reporting service (its own OAuth scope). |
-| [`gplay-orders`](skills/gplay-orders/SKILL.md) | Looking up a Google Play order by its order ID (single or batch) from a complaint or payout report, or issuing a refund. Refund moves money and is `--confirm`-gated; both need explicit financial capabilities never bundled into a role. |
-| [`gplay-games`](skills/gplay-games/SKILL.md) | Configuring a game's Play Games Services achievements and leaderboards (list/view/create/set/remove), addressed by the numeric Play Games application ID (not the package). Draft-only — publishing to players stays Console-only. |
-| [`gplay-recovery`](skills/gplay-recovery/SKILL.md) | Responding to a bad release: staging a draft app recovery, deploying it to force-update impacted users off the broken versionCode, widening its audience (append-only), or cancelling it. Deploy/cancel/add-targeting are `--confirm`-gated. |
-| [`gplay-device-tiers`](skills/gplay-device-tiers/SKILL.md) | Creating or inspecting device tier configs for tiered content delivery (device groups, an ordered tier set, country sets). Immutable — create/get/list only, no update or delete — so a new config is a new id. |
-| [`gplay-appstore`](skills/gplay-appstore/SKILL.md) | Operating a third-party Android app store: mirroring Play's catalog export (one app, or the incremental update-event feed), and taking a hosted app through Google's review path — `create` the record, `apk`/`image`/`policy upload` its artifacts, `submit` it to review (irrevocable, `--confirm`-gated), `publish-status set` to withdraw or restore it. |
-| [`gplay-signing`](skills/gplay-signing/SKILL.md) | Enrolling an app into Play App Signing with a self-hosted Cloud KMS key, or rotating to a new KMS key (`apksigner` lineage + reason). Only for organisations that must keep key custody external; Google-managed Play App Signing has no API and stays Console-only. Irreversible, `--confirm`-gated. |
+| [`gplay-cli-usage`](skills/gplay-cli-usage/SKILL.md) | Running any gplay command or wiring gplay into CI: credential and `--package` resolution, output formats, exit codes, the `--dry-run`/`--confirm`/`GPLAY_READONLY` gates, the implicit Edit lifecycle, and `gplay schema` for offline API introspection. |
+| [`gplay-setup`](skills/gplay-setup/SKILL.md) | Setting up gplay auth for the first time, switching, rotating or removing a service account, or diagnosing an auth failure. |
+| [`gplay-apps`](skills/gplay-apps/SKILL.md) | Registering or pinning packages, finding which apps a credential can reach, editing app details (default language, contact info), or sweeping the account for drift with `apps audit`. |
+| [`gplay-release-flow`](skills/gplay-release-flow/SKILL.md) | Uploading an AAB or APK, promoting a build from internal to production, steering a staged rollout (halt, resume, complete), downloading the APKs Play generates, attaching a ProGuard/R8 mapping, sharing a build through Internal App Sharing, or managing legacy OBB files. |
+| [`gplay-tracks`](skills/gplay-tracks/SKILL.md) | Checking what a track holds, creating a closed-testing track before an upload, reading country availability, or setting the Google Groups that test a closed track. |
+| [`gplay-reviews`](skills/gplay-reviews/SKILL.md) | Triaging recent reviews (the API only returns the last 7 days), reading one review's thread, replying singly or in batch from a TSV, or pulling older reviews from the monthly GCS reports with `reviews history`. |
+| [`gplay-metadata-sync`](skills/gplay-metadata-sync/SKILL.md) | Editing a store listing or its screenshots, adding a locale, pulling the listing into version control, or gating a listing change in CI. |
+| [`gplay-monetization`](skills/gplay-monetization/SKILL.md) | Putting subscriptions and one-time products under version control, editing prices, offers or listings, checking catalog drift in CI, promoting a legacy in-app product to v2, or repricing live subscribers. Unlike `metadata`, a live product with no file on disk becomes a delete in the plan, and a plan with deletes needs `--confirm`. |
+| [`gplay-compliance`](skills/gplay-compliance/SKILL.md) | Pushing or validating the Data Safety declaration from a versioned CSV. It is the only Play compliance form with an API. |
+| [`gplay-team`](skills/gplay-team/SKILL.md) | Inviting or off-boarding a Developer account member, granting per-app access, or looking up a permission alias or role bundle. |
+| [`gplay-customapps`](skills/gplay-customapps/SKILL.md) | Creating a private app for an organisation on managed Google Play, the only API call that creates an app record. Irreversible and `--confirm`-gated. |
+| [`gplay-vitals`](skills/gplay-vitals/SKILL.md) | Checking crash, ANR, slow-start, rendering, wakeup or LMK rates after a rollout, reading error reports and clustered issues, or listing anomalies Play detected. Read-only, and it needs its own OAuth scope. |
+| [`gplay-orders`](skills/gplay-orders/SKILL.md) | Looking up an order by its ID from a buyer complaint or a payout report, or refunding it. A refund moves money: it is `--confirm`-gated and needs a money permission that no role bundle includes. |
+| [`gplay-games`](skills/gplay-games/SKILL.md) | Creating, editing or deleting a game's Play Games Services achievements and leaderboards, addressed by the Play Games application ID rather than the package. Publishing them to players stays in the Console. |
+| [`gplay-recovery`](skills/gplay-recovery/SKILL.md) | Forcing users off a broken versionCode: drafting an app recovery, deploying it, widening its audience (it can only grow), or cancelling it. |
+| [`gplay-device-tiers`](skills/gplay-device-tiers/SKILL.md) | Creating or inspecting device tier configs for tiered asset delivery. A config cannot be updated or deleted, so a change means a new config ID. |
+| [`gplay-appstore`](skills/gplay-appstore/SKILL.md) | Running a third-party Android app store: mirroring Play's catalog or its update-event feed, submitting a hosted app to Google's review (irrevocable), or withdrawing it. |
+| [`gplay-signing`](skills/gplay-signing/SKILL.md) | Enrolling an app in Play App Signing with a key held in your own Cloud KMS, or rotating that key. Google-managed signing has no API. Irreversible and `--confirm`-gated. |
 
-> **Also covered by the foundation skill:** `gplay schema` — the offline,
-> no-auth Android Publisher API introspection command (`[experimental]`). It
-> has no dedicated skill yet; `gplay-cli-usage` documents it next to `--help`.
+## Coverage
 
-## Roadmap
+Every `gplay` command is documented by at least one skill: the check below
+walks the binary's command tree and fails on any command no skill names, so a
+gplay release that adds a command group turns CI red until a skill covers it.
+Commands marked `[experimental]` in `gplay --help` sit outside gplay's
+stability contract, and `gplay-cli-usage` says what that means for CI.
 
-The set above tracks the current `gplay` surface, GA since
-[**v1.0.0**](https://gplay.sh/docs/guides/migrate-to-1-0/). Commands the CLI
-marks `[experimental]` sit outside that contract — `gplay-cli-usage` says what
-that means for CI. Skills for gated surfaces land as those CLI surfaces ship.
-
-Subscriptions & IAP — the last open roadmap item, gated on
-[`#51`](https://github.com/PollyGlot/google-play-cli/issues/51) — shipped in
-gplay **v0.18.0** and is now covered by
-[`gplay-monetization`](skills/gplay-monetization/SKILL.md). RevenueCat
-reconciliation is not part of it: gplay wraps the Play side only.
-
-See the CLI's [`docs/BACKLOG.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/BACKLOG.md)
-for the full roster and gating.
+What the CLI plans to cover next lives in its
+[`docs/BACKLOG.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/BACKLOG.md).
 
 ## Repo layout
 
-One folder per skill, each holding a `SKILL.md`:
+One folder per skill. Each holds a `SKILL.md`, and sometimes a companion file
+the skill links to for a rare case (`gplay-release-flow/obb.md`):
 
 ```
 skills/
   gplay-release-flow/
     SKILL.md
+    obb.md
 ```
 
-Every `SKILL.md` opens with YAML frontmatter carrying two required fields:
+Every `SKILL.md` opens with YAML frontmatter carrying exactly two fields:
 
 ```yaml
 ---
 name: gplay-release-flow
-description: <what it does> … Use when <the trigger phrasing>.
+description: <what it does>. Use when <the trigger phrasing>.
 ---
 ```
 
-- **`name`** — kebab-case, matches the skill's folder name.
-- **`description`** — one line, ends with a "Use when …" clause so an agent
-  can decide relevance. This is the same text shown in the catalogue above.
-
-A missing or malformed `name`/`description` breaks `npx skills add`, so keep
-both fields present and well-formed when adding a skill.
+`name` is kebab-case and matches the folder. `description` is one line ending
+in a "Use when" clause, which the agent reads to decide whether to load the
+skill. If the description contains `: `, quote it: unquoted, the YAML is
+invalid and `npx skills add` skips the skill without an error.
 
 ## Checking a change
 
@@ -102,10 +97,10 @@ python3 scripts/check-skills.py --offline  # frontmatter, links and style only
 ```
 
 The script resolves every `gplay` invocation in the skills against the
-installed binary's real command tree and flag set, so a flag that no longer
-exists, an invented subcommand, or a frontmatter typo fails loudly instead of
-shipping. CI runs it on every pull request and weekly, since the drift usually
-comes from a gplay release rather than from a commit here.
+installed binary's commands and flags. A removed flag, an invented subcommand
+or a frontmatter typo fails the run instead of shipping. CI runs it on every
+pull request and every Monday, because drift usually comes from a gplay
+release rather than from a commit here.
 
 ## License
 

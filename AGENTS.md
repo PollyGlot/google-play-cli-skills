@@ -11,5 +11,8 @@ distribués via [skills.sh](https://skills.sh/PollyGlot/google-play-cli-skills).
   lundis, pour attraper la dérive causée par une release de gplay.
 - Rédaction en anglais, instructions actionnables pour un agent, suivre
   le skill global `writing-for-agents`.
-- Pas de tiret cadratin dans la prose des skills, la barrière le refuse. Les
-  blocs de code en sont exemptés : ils citent ce que le binaire imprime.
+- Pas de tiret cadratin dans la prose des skills, du README ni de
+  `.github/SECURITY.md` : la barrière le refuse. Les blocs de code en sont
+  exemptés, ils citent ce que le binaire imprime.
+- Une skill ajoutée ou renommée doit avoir sa ligne dans le catalogue du
+  README, la barrière vérifie la correspondance.
