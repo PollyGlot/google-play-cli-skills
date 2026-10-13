@@ -34,6 +34,11 @@ gplay team users remove carol@example.com --confirm     # off-boarding is destru
 containing the all-permissions enum): `--grant-admin`, exit `3` without it
 (ADR-0017). `remove` needs `--confirm`.
 
+Inviting an existing member fails with exit `60`. To make `add` safe to
+re-run, pass `--if-exists skip` (leave the member as is) or `--if-exists
+update` (converge: replaces the whole permission set, like `set`), both
+`[experimental]`. The `--grant-admin` gate still applies first.
+
 ## Per-app access grants
 
 ```bash
