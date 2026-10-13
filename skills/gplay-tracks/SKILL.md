@@ -19,11 +19,14 @@ gplay tracks view --track production                 # one track's full state
 
 ```bash
 gplay tracks create qa-team
+gplay tracks create qa-team --if-exists skip     # idempotent: prints the existing track, commits nothing
 ```
 
 Creates a closed-testing track; open/internal tracks have no API path (they
 always exist). An upload or promote to a missing custom track fails with exit
-`30`: create it here first (`gplay-release-flow`, trackhint).
+`30`: create it here first (`gplay-release-flow`, trackhint). A re-create
+fails with exit `30` too; in a CI script that runs on every build, pass
+`--if-exists skip` (`[experimental]`) instead of swallowing the exit code.
 
 ## Country availability (read-only)
 
