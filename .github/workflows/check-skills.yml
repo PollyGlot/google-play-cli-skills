@@ -17,13 +17,17 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      log: ${{ steps.log.outputs.log }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
       - name: Install gplay
         run: |
@@ -31,7 +35,10 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Report the version under test
-        run: gplay version
+        id: version
+        run: |
+          gplay version
+          echo "version=$(gplay version | head -1)" >> "$GITHUB_OUTPUT"
 
       - name: Check the skills against the binary
         id: check
@@ -39,20 +46,40 @@ jobs:
           set -o pipefail
           python3 scripts/check-skills.py 2>&1 | tee check.log
 
-      # A red scheduled run has no author to notify, so it goes unnoticed for
-      # days. Open (or refresh) one issue carrying the script's output instead;
-      # it closes itself when a later scheduled run is green.
-      - name: Open or update the drift issue
-        if: failure() && github.event_name == 'schedule'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # Hands the log to the report job, which alone holds issues: write.
+      - name: Export the log
+        id: log
+        if: always() && github.event_name == 'schedule'
         run: |
-          version="$(gplay version | head -1)"
-          title="skills drifted from $(printf "%s" "$version" | cut -d"(" -f1 | sed "s/ *$//")"
+          delim="EOF_$(openssl rand -hex 8)"
+          { echo "log<<$delim"; cat check.log 2>/dev/null; echo "$delim"; } >> "$GITHUB_OUTPUT"
+
+  # A red scheduled run has no author to notify, so it goes unnoticed for
+  # days. Open (or refresh) one issue carrying the script's output instead;
+  # it closes itself when a later scheduled run is green. Its own job so that
+  # only it gets issues: write, and it runs no third-party code.
+  report:
+    needs: check
+    if: always() && github.event_name == 'schedule' && needs.check.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.check.outputs.version }}
+      CHECK_LOG: ${{ needs.check.outputs.log }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open or update the drift issue
+        if: needs.check.result == 'failure'
+        run: |
+          title="skills drifted from $(printf "%s" "$VERSION" | cut -d"(" -f1 | sed "s/ *$//")"
+          # shellcheck disable=SC2016 # literal Markdown fence, not an expansion
           body="$(printf '%s\n\n```\n%s\n```\n\nRun: %s' \
             "The Monday check found skills out of step with the installed gplay binary." \
-            "$(cat check.log)" \
-            "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")"
+            "$CHECK_LOG" \
+            "$RUN_URL")"
           existing="$(gh issue list --label skills-drift --state open --json number --jq '.[0].number')"
           if [ -n "$existing" ]; then
             gh issue edit "$existing" --title "$title" --body "$body"
@@ -61,10 +88,8 @@ jobs:
           fi
 
       - name: Close the drift issue when green again
-        if: success() && github.event_name == 'schedule'
-        env:
-          GH_TOKEN: ${{ github.token }}
+        if: needs.check.result == 'success'
         run: |
           for n in $(gh issue list --label skills-drift --state open --json number --jq '.[].number'); do
-            gh issue close "$n" --comment "Green again against $(gplay version | head -1)."
+            gh issue close "$n" --comment "Green again against $VERSION."
           done
