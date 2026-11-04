@@ -20,7 +20,7 @@ ladder: the same `versionCode`, no AAB re-upload. On a track, the latest
 release moves through a small state machine:
 
 ```
-draft ──► inProgress (userFraction f) ──► completed (f = 1.0)
+draft ──► inProgress (userFraction f, 0 < f < 1) ──► completed (no fraction)
                │  ▲
             halt│  │resume
                ▼  │
@@ -28,8 +28,10 @@ draft ──► inProgress (userFraction f) ──► completed (f = 1.0)
 ```
 
 `rollout` sets the fraction, `halt` freezes it, `resume` un-freezes it, and
-`complete` ramps to 100%. When a track holds two releases (e.g. `inProgress`
-plus `halted`), every verb refuses to guess (exit `60`): pin one with
+`complete` ramps to 100%. `--staged` takes a fraction strictly between 0 and
+1: `--staged 1.0` exits `2` before any call; a full rollout is `--complete`
+(on `upload`/`promote`) or `releases complete`. When a track holds two
+releases (e.g. `inProgress` plus `halted`), every verb refuses to guess (exit `60`): pin one with
 `--version-code` or `--release-name`.
 
 ## Upload a build to a track
@@ -93,8 +95,14 @@ These four act on the **latest** release of `--track`.
 gplay releases rollout  --track production --staged 0.25 --confirm   # set fraction → inProgress
 gplay releases halt     --track production --confirm                 # freeze at current fraction
 gplay releases resume   --track production --confirm                 # un-freeze, continue
-gplay releases complete --track production --confirm                 # ramp to 1.0 → completed
+gplay releases complete --track production --confirm                 # ramp to 100% → completed
 ```
+
+A track holds one `completed` release at most. `complete` therefore drops the
+previous full rollout in the same update, as the Play Console does, and names
+its versionCodes as `superseded` on the ✓ line (`--output json` stays the
+verbatim `tracks.update` body). Halted, draft and other `inProgress` releases
+stay untouched; `rollout`, `halt` and `resume` never drop a release.
 
 ## Inspect what is on a track
 
