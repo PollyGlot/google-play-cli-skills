@@ -1,6 +1,6 @@
 ---
 name: gplay-release-flow
-description: Ship Android releases through Google Play with `gplay releases`. Use when uploading an AAB or APK to a track, promoting a build up the track ladder, steering a staged rollout, inspecting or downloading what a track holds, attaching a ProGuard/R8 mapping, sharing a build via Internal App Sharing, or managing legacy OBB expansion files.
+description: Ship Android releases through Google Play with `gplay releases`. Use when uploading an AAB or APK to a track, promoting a build up the track ladder, steering a staged rollout, inspecting or downloading what a track holds, building a system APK for a device image, attaching a ProGuard/R8 mapping, sharing a build via Internal App Sharing, or managing legacy OBB expansion files.
 ---
 
 # gplay release flow
@@ -93,16 +93,43 @@ These four act on the **latest** release of `--track`.
 
 ```bash
 gplay releases rollout  --track production --staged 0.25 --confirm   # set fraction → inProgress
-gplay releases halt     --track production --confirm                 # freeze at current fraction
+gplay releases halt     --track production                           # freeze at current fraction
 gplay releases resume   --track production --confirm                 # un-freeze, continue
 gplay releases complete --track production --confirm                 # ramp to 100% → completed
 ```
+
+`halt` needs no `--confirm` even on production: it reaches no new user.
 
 A track holds one `completed` release at most. `complete` therefore drops the
 previous full rollout in the same update, as the Play Console does, and names
 its versionCodes as `superseded` on the ✓ line (`--output json` stays the
 verbatim `tracks.update` body). Halted, draft and other `inProgress` releases
 stay untouched; `rollout`, `halt` and `resume` never drop a release.
+
+### Read the live track first with `--plan`
+
+`--dry-run` stays offline, so it cannot say which release a transition hits or
+replaces. `--plan` (`[experimental]`, on the four verbs above, not on
+`promote`) reads the live track and writes nothing: run it before any
+production transition, then re-run the same line with `--confirm` instead of
+`--plan`.
+
+```bash
+gplay releases complete --track production --plan
+gplay releases complete --track production --confirm
+```
+
+- It names the target release, the status and fraction it would end in, and
+  the releases it would supersede or keep. `--output json` is gplay-shaped
+  and carries `"plan": true`, never a `tracks.update` body.
+- No `--confirm` needed. It needs a credential: it reads inside the pinned
+  Edit when `gplay edits begin` opened one, else in a throwaway Edit it always
+  discards.
+- An ambiguous track fails with exit `60`, as the live call would: add the
+  `--version-code` or `--release-name` the plan should use, and keep it on the
+  live call.
+- `--plan` with `--dry-run` exits `2`. Under `GPLAY_READONLY` it is refused
+  (exit `4`) like the write it previews.
 
 ## Inspect what is on a track
 
@@ -134,6 +161,22 @@ gplay releases generated download <downloadId> --version-code 42 --dest ./univer
 Read a fresh Download ID from `list` each time: it changes across
 re-generation. A failed download leaves no partial file.
 
+## System APK variants (device system images)
+
+`system-apks` (`[experimental]`) asks Play to build an APK for an OEM or
+preload system image from an uploaded AAB, then lists, reads and downloads it.
+
+```bash
+gplay releases system-apks create --version-code 42 --abi arm64-v8a --screen-density 480 --locale en-US --dry-run
+gplay releases system-apks list --version-code 42
+gplay releases system-apks view <variantId> --version-code 42
+gplay releases system-apks download <variantId> --version-code 42 --dest ./system.apk
+```
+
+A direct call outside the Edit lifecycle. `create` only adds a variant (no
+`--confirm`), and Play assigns the `variantId` that `view` and `download`
+take: read it from `create` or `list`.
+
 ## Deobfuscation mappings (symbolicate vitals crash stacks)
 
 ```bash
@@ -163,8 +206,8 @@ APK-only, legacy. When the task touches `.obb` files, read [obb.md](obb.md).
 ## Production safety
 
 Production defaults to a **draft** (ADR-0002): `--complete` / `--staged`
-there, and every rollout verb on production, reach real users, so each
-requires `--confirm`.
+there, and `rollout`, `resume` and `complete` on production, reach real users,
+so each requires `--confirm`. `halt` is exempt.
 
 ## Track must exist first (trackhint)
 
