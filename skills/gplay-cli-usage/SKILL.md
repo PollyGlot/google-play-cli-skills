@@ -145,8 +145,8 @@ machine.
   *advisory*, an agent holding the credential can pass them itself; set this in
   the environment and the kernel refuses **every mutating command** before
   credential resolution and before any network call, regardless of flags, while
-  read commands and `--dry-run` previews keep working (`releases --plan` does
-  not). Its refusal exits `4`.
+  read commands, `--dry-run` previews and `releases --plan` keep working. Its
+  refusal exits `4`.
 
 ## The Edit lifecycle: implicit by default, explicit when you batch
 
