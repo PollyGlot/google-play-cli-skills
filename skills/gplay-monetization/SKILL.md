@@ -127,6 +127,12 @@ is its shape**; no gplay-invented marker:
 | `sku` | legacy `inappproducts` |
 | `productId` | v2 `onetimeproducts` |
 
+When Google has retired the legacy API for the app, `pull` and `apply` read
+v2 only and print a stderr `NOTE` saying so. `apply` then refuses (exit `2`)
+while `--dir` still holds a legacy (`sku`) file: run `iap pull` to rewrite it
+as v2, after committing or setting aside local edits, since `pull` mirrors
+the live catalog.
+
 **Purchase options and offers carry `state` too**, same stance as
 subscriptions; `CANCELLED` (pre-order offer) is the one-way case gated in
 the table above.

@@ -131,7 +131,8 @@ machine.
   prints the payload/diff it *would* send, with no HTTP call (and usually no
   auth needed). Reach for it before any production-affecting write. Under
   `--dry-run --output json` the preview lists the gates the live call needs
-  in `requires`.
+  in `requires`. Release transitions also take `--plan`, which reads the
+  live track instead (`gplay-release-flow`).
 - **`--confirm`** gates the writes that reach real users or the live store,
   production releases, `metadata apply`, `compliance datasafety set`, and
   destructive local writes like `auth logout`. Omitting it exits `3`, naming
@@ -144,7 +145,8 @@ machine.
   *advisory*, an agent holding the credential can pass them itself; set this in
   the environment and the kernel refuses **every mutating command** before
   credential resolution and before any network call, regardless of flags, while
-  read commands and `--dry-run` previews keep working. Its refusal exits `4`.
+  read commands and `--dry-run` previews keep working (`releases --plan` does
+  not). Its refusal exits `4`.
 
 ## The Edit lifecycle: implicit by default, explicit when you batch
 
@@ -171,7 +173,8 @@ No auto-commit or auto-discard in explicit mode; `edits status` shows the pin
 
 Surfaces outside the Edit model, direct calls with no `editId` that
 `edits begin` never batches: `compliance datasafety`, `device-tiers`,
-`recovery`, `orders`, `vitals`, `games`, `subscriptions`, `iap`, `appstore`.
+`recovery`, `orders`, `vitals`, `games`, `subscriptions`, `iap`, `appstore`,
+`releases generated`, `releases system-apks`.
 
 ## Map of skills
 
