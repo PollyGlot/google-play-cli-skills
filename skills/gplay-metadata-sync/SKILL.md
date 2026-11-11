@@ -20,9 +20,12 @@ pull  →  edit on disk  →  validate (offline)  →  apply --dry-run  →  app
 
 On disk, text is `<locale>/<field>.txt` (`title`, `short_description`,
 `full_description`, `video`). Images sit under `<locale>/images/`: a singular
-slot (`icon`, `featureGraphic`, `tvBanner`, `promoGraphic`) is
+slot (`icon`, `featureGraphic`, `tvBanner`) is
 `<type>.<ext>`; a gallery slot (the `*Screenshots` types) is
-`<type>/1.<ext>…N.<ext>` in display order.
+`<type>/1.<ext>…N.<ext>` in display order. Google retired `promoGraphic`:
+a leftover `images/promoGraphic.*` (common in Fastlane `supply` trees) is
+never uploaded, and `metadata images validate`/`images apply` warn with its path, so delete
+the file.
 
 - **`metadata pull`** copies the live Listings into the tree; additive, so
   `pull` then `apply` is a no-op.
