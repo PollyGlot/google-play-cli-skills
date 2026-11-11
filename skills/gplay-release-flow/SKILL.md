@@ -128,8 +128,8 @@ gplay releases complete --track production --confirm
 - An ambiguous track fails with exit `60`, as the live call would: add the
   `--version-code` or `--release-name` the plan should use, and keep it on the
   live call.
-- `--plan` with `--dry-run` exits `2`. Under `GPLAY_READONLY` it is refused
-  (exit `4`) like the write it previews.
+- `--plan` with `--dry-run` exits `2`. Under `GPLAY_READONLY` it runs, like
+  `--dry-run`: it reads the live track and writes nothing.
 
 ## Inspect what is on a track
 
