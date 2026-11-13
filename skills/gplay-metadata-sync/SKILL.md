@@ -76,6 +76,10 @@ gplay metadata images apply --dir ./metadata --confirm    # publishes, live imme
 
 - `images list` walks the 9 slot types across every locale; `--type` narrows
   to one.
+- `images pull` downloads each image at original size (gplay 2.4.2+; older
+  builds pulled 512px thumbnails, so re-pull before an `apply` round trip),
+  checks it against the API's `sha256`, and writes the tree all or nothing: a
+  failed or mismatched download leaves the destination untouched.
 - `images validate` is the same offline lint, exit `20`.
 - `images apply` is additive like the text side; `--prune` deletes online-only
   images (destructive, `--confirm`); `--locale`/`--type` scope the run.

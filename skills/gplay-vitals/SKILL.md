@@ -82,11 +82,13 @@ gplay vitals anomalies --filter 'activeBetween("2026-01-01T00:00:00Z", UNBOUNDED
 ## Freshness: an empty window means unknown
 
 Metrics land with a lag: every rate/query command prints a freshness note to
-stderr (the latest date carrying data). A short window right after a release
-stays empty until data lands; the freshness line is the bound, and an empty
-window means unknown, not zero. `--describe` on a preset or `query` returns
-the set's latest available end time instead of a timeline: ask it before
-choosing a window.
+stderr (the latest date carrying data). Since gplay 2.4.2 the window ends at
+that freshness, not today, and `--since` counts back from it, so a DAILY query
+made before Google publishes the day no longer fails with HTTP 400. A short
+window right after a release can still be empty: an empty window means
+unknown, not zero. `--describe` on a preset or `query` returns the set's
+latest available end time instead of a timeline: ask it to know which day the
+window ends on.
 
 ## CI gate
 
