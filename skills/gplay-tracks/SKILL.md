@@ -20,7 +20,13 @@ gplay tracks view --track production                 # one track's full state
 ```bash
 gplay tracks create qa-team
 gplay tracks create qa-team --if-exists skip     # idempotent: prints the existing track, commits nothing
+gplay tracks create beta-wear --form-factor wear  # created as wear:beta-wear
 ```
+
+`--form-factor wear|automotive` prefixes the name the way Play requires
+(`wear:beta-wear`); use that full name in later `--track` flags. A name that
+already carries the right prefix is kept; another form factor's prefix exits
+`2`.
 
 Creates a closed-testing track; open/internal tracks have no API path (they
 always exist). An upload or promote to a missing custom track fails with exit

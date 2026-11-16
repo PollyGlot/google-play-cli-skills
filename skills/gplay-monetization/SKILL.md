@@ -61,6 +61,7 @@ gplay subscriptions pull                              # → ./monetization/subsc
 gplay subscriptions apply --dry-run                   # ONLINE read, prints the plan, changes nothing
 gplay subscriptions apply                             # creates/patches/state changes
 gplay subscriptions apply --confirm                   # …when the plan also deletes
+gplay subscriptions apply --latency-tolerance tolerant  # large catalog (iap apply too): up to 24 h to propagate, far higher throughput
 ```
 
 - **Base plans ride the parent patch.** Base plan config (billing type,

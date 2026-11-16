@@ -31,7 +31,8 @@ gplay auth doctor --package com.example.app
 
 `auth doctor` is the first move when an authenticated command fails: it stops
 at the first failing check, so the report says whether the key is bad (exit
-`10`) or valid but not invited on the app (exit `11`, tested only with
+`10`; an unreachable token endpoint says "network failure, not a key problem"
+under the same exit code) or valid but not invited on the app (exit `11`, tested only with
 `--package`).
 
 ## Managing stored accounts

@@ -85,7 +85,21 @@ error.
 ```bash
 gplay releases promote --from internal --to alpha
 gplay releases promote --from beta --to production --staged 0.1 --confirm
+gplay releases promote --from alpha --to beta --plan    # read both tracks, write nothing
 ```
+
+The copy **replaces every release already on `--to`**, a halted or draft one
+included, and the ✓ line names the versionCodes it replaced (gplay 2.5.0+).
+`--dry-run` reads no track, so it cannot name them: run `--plan`
+(`[experimental]`, same rules as below) before promoting onto a track that may
+hold something. `--from` equal to `--to` exits `2` before any call. The
+source's `countryTargeting` carries over to a staged rollout on production
+only, the one place Play accepts it.
+
+Release notes are checked before the Edit opens, `--dry-run` included: an
+empty note or one over 500 Unicode characters exits `20` and names the locale.
+Same check on `releases upload`. A `default.txt` is only checked when it is
+actually used.
 
 ## Staged rollout: rollout / halt / resume / complete
 
@@ -109,7 +123,7 @@ stay untouched; `rollout`, `halt` and `resume` never drop a release.
 ### Read the live track first with `--plan`
 
 `--dry-run` stays offline, so it cannot say which release a transition hits or
-replaces. `--plan` (`[experimental]`, on the four verbs above, not on
+replaces. `--plan` (`[experimental]`, on the four verbs above and on
 `promote`) reads the live track and writes nothing: run it before any
 production transition, then re-run the same line with `--confirm` instead of
 `--plan`.
