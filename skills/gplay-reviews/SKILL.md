@@ -65,6 +65,7 @@ gplay reviews reply --review-id <REVIEW_ID> --reply "Thanks for the feedback!"
 
 # Batch: a TSV of <review-id><TAB><reply text>, one per line
 gplay reviews reply --batch replies.tsv
+# A reply over 350 characters warns on stderr (Play rejects long replies); keep it short
 gplay reviews reply --batch -        # read the TSV from stdin
 ```
 

@@ -83,5 +83,7 @@ gplay metadata images apply --dir ./metadata --confirm    # publishes, live imme
 - `images validate` is the same offline lint, exit `20`.
 - `images apply` is additive like the text side; `--prune` deletes online-only
   images (destructive, `--confirm`); `--locale`/`--type` scope the run.
+  `--ai-generated` (`[experimental]`) attests the uploaded images are AI
+  generated, `--ai-generated=false` that they are not; unset sends nothing.
 - The CI gate is `jq -e '.summary.upload + .summary.delete + .summary.reorder
   > 0'` over `apply --dry-run --output json` (`{package, slots[], summary}`).
