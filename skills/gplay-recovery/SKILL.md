@@ -19,6 +19,7 @@ A recovery is keyed by package + `versionCode`, lives outside the Edit model
 gplay recovery create --version-code 431 --all-users
 gplay recovery create --version-code 431 --regions US,FR      # or scope it
 gplay recovery create --version-code 431 --sdk-levels 30,31
+gplay recovery create --version-range 1040-1042 --all-users   # inclusive range; exclusive with --version-code
 
 # 2. Inspect the recoveries on that versionCode (find the appRecoveryId):
 gplay recovery list --version-code 431

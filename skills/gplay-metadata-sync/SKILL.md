@@ -20,9 +20,12 @@ pull  →  edit on disk  →  validate (offline)  →  apply --dry-run  →  app
 
 On disk, text is `<locale>/<field>.txt` (`title`, `short_description`,
 `full_description`, `video`). Images sit under `<locale>/images/`: a singular
-slot (`icon`, `featureGraphic`, `tvBanner`, `promoGraphic`) is
+slot (`icon`, `featureGraphic`, `tvBanner`) is
 `<type>.<ext>`; a gallery slot (the `*Screenshots` types) is
-`<type>/1.<ext>…N.<ext>` in display order.
+`<type>/1.<ext>…N.<ext>` in display order. Google retired `promoGraphic`:
+a leftover `images/promoGraphic.*` (common in Fastlane `supply` trees) is
+never uploaded, and `metadata images validate`/`images apply` warn with
+its path, so delete the file.
 
 - **`metadata pull`** copies the live Listings into the tree; additive, so
   `pull` then `apply` is a no-op.
@@ -73,8 +76,14 @@ gplay metadata images apply --dir ./metadata --confirm    # publishes, live imme
 
 - `images list` walks the 9 slot types across every locale; `--type` narrows
   to one.
+- `images pull` downloads each image at original size (gplay 2.4.2+; older
+  builds pulled 512px thumbnails, so re-pull before an `apply` round trip),
+  checks it against the API's `sha256`, and writes the tree all or nothing: a
+  failed or mismatched download leaves the destination untouched.
 - `images validate` is the same offline lint, exit `20`.
 - `images apply` is additive like the text side; `--prune` deletes online-only
   images (destructive, `--confirm`); `--locale`/`--type` scope the run.
+  `--ai-generated` (`[experimental]`) attests the uploaded images are AI
+  generated, `--ai-generated=false` that they are not; unset sends nothing.
 - The CI gate is `jq -e '.summary.upload + .summary.delete + .summary.reorder
   > 0'` over `apply --dry-run --output json` (`{package, slots[], summary}`).

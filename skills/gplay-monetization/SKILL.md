@@ -61,6 +61,7 @@ gplay subscriptions pull                              # → ./monetization/subsc
 gplay subscriptions apply --dry-run                   # ONLINE read, prints the plan, changes nothing
 gplay subscriptions apply                             # creates/patches/state changes
 gplay subscriptions apply --confirm                   # …when the plan also deletes
+gplay subscriptions apply --latency-tolerance tolerant  # large catalog (iap apply too): up to 24 h to propagate, far higher throughput
 ```
 
 - **Base plans ride the parent patch.** Base plan config (billing type,
@@ -135,7 +136,11 @@ the live catalog.
 
 **Purchase options and offers carry `state` too**, same stance as
 subscriptions; `CANCELLED` (pre-order offer) is the one-way case gated in
-the table above.
+the table above. `INACTIVE_PUBLISHED` is Play's own state for an option it
+migrated: off sale, still exposed to the Billing Library. Declaring
+`INACTIVE` over it is refused (exit `2`, no write): keep
+`INACTIVE_PUBLISHED` (what `pull` writes) or omit `state:`, and never
+activate it to get past the refusal, that puts it back on sale.
 
 **Legacy is inert**: gplay never creates, edits or deletes a legacy product,
 the only gesture is the **one-way promotion** to v2 (rewrite the file with

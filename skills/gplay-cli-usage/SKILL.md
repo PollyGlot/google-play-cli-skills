@@ -168,7 +168,9 @@ gplay edits commit           # or: gplay edits discard
 ```
 
 No auto-commit or auto-discard in explicit mode; `edits status` shows the pin
-(`--live` asks the server whether it still knows the Edit). Per-command rules
+(`--live` asks the server whether it still knows the Edit). A corrupt pin file
+makes every Edit command exit `60` (gplay 2.5.0+); `gplay edits discard` clears
+it without any API call. Per-command rules
 (the exit `60` cases, a failed commit) are in `gplay edits <cmd> --help`.
 
 Surfaces outside the Edit model, direct calls with no `editId` that

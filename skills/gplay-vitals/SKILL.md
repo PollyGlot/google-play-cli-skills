@@ -36,7 +36,13 @@ All presets share the same knobs:
 ```bash
 gplay vitals crashes --by versionCode --version-code 123   # slice, then filter to one build
 gplay vitals anr --since 7d --period HOURLY                # window: 28d default; HOURLY opt-in
+gplay vitals crashes --user-cohort OS_BETA                 # OS_PUBLIC, APP_TESTERS or OS_BETA
 ```
+
+`--period HOURLY` exists only on `crashes` and `anr` (`crashrate`, `anrrate`);
+every other set is DAILY. `--user-cohort` picks the user view; the sets that
+accept each value are listed in `gplay vitals query --help`, any other
+combination exits `2` offline.
 
 `--version-code` takes the codes `gplay vitals releases` lists (the tracks and
 serving releases the Reporting service knows), `[experimental]`.
@@ -63,7 +69,14 @@ preset and are `query`-only, DAILY only: `anonrssandswapmemoryusage` and
 gplay vitals errors counts      # error report counts over a window
 gplay vitals errors issues      # clustered issues, crashes/ANRs grouped by cause
 gplay vitals errors reports     # individual error reports (the stack traces)
+gplay vitals errors issues --since 6h --sample-reports 1 --output json   # hourly window, one sample report per issue
 ```
+
+On `errors issues` and `errors reports`, `--since` in days (`7d`) covers whole
+UTC days; in hours (`6h`, `24h`) it counts whole hours back from the newest
+data (gplay 2.5.0+; older builds silently searched whole days).
+`--sample-reports 1` attaches one sample report name per issue, which saves a
+second lookup.
 
 Obfuscated (R8/ProGuard) stacks stay unreadable until the versionCode's mapping
 is uploaded under `releases` (`--mapping` on `releases upload`, or `releases
@@ -82,11 +95,13 @@ gplay vitals anomalies --filter 'activeBetween("2026-01-01T00:00:00Z", UNBOUNDED
 ## Freshness: an empty window means unknown
 
 Metrics land with a lag: every rate/query command prints a freshness note to
-stderr (the latest date carrying data). A short window right after a release
-stays empty until data lands; the freshness line is the bound, and an empty
-window means unknown, not zero. `--describe` on a preset or `query` returns
-the set's latest available end time instead of a timeline: ask it before
-choosing a window.
+stderr (the latest date carrying data). Since gplay 2.4.2 the window ends at
+that freshness, not today, and `--since` counts back from it, so a DAILY query
+made before Google publishes the day no longer fails with HTTP 400. A short
+window right after a release can still be empty: an empty window means
+unknown, not zero. `--describe` on a preset or `query` returns the set's
+latest available end time instead of a timeline: ask it to know which day the
+window ends on.
 
 ## CI gate
 
