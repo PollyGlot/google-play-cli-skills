@@ -64,46 +64,28 @@ Commands marked `[experimental]` in `gplay --help` sit outside gplay's
 stability contract, and `gplay-cli-usage` says what that means for CI.
 
 What the CLI plans to cover next lives in its
-[`docs/BACKLOG.md`](https://github.com/PollyGlot/google-play-cli/blob/main/docs/BACKLOG.md).
+[issue tracker](https://github.com/PollyGlot/google-play-cli/issues)
+(labels `type:prd` and `type:slice`).
 
-## Repo layout
+## Contributing
 
-One folder per skill. Each holds a `SKILL.md`, and sometimes a companion file
-the skill links to for a rare case (`gplay-release-flow/obb.md`):
+A skill is `skills/<name>/SKILL.md`, plus a companion `.md` it links to for a
+rare case (`gplay-release-flow/obb.md`), and a row in the catalogue above. Its
+frontmatter holds exactly `name` (the folder name) and `description` (one line
+ending in a "Use when" clause). Quote a description that contains `: `:
+unquoted, the YAML is invalid and `npx skills add` skips the skill without an
+error.
 
-```
-skills/
-  gplay-release-flow/
-    SKILL.md
-    obb.md
-```
-
-Every `SKILL.md` opens with YAML frontmatter carrying exactly two fields:
-
-```yaml
----
-name: gplay-release-flow
-description: <what it does>. Use when <the trigger phrasing>.
----
-```
-
-`name` is kebab-case and matches the folder. `description` is one line ending
-in a "Use when" clause, which the agent reads to decide whether to load the
-skill. If the description contains `: `, quote it: unquoted, the YAML is
-invalid and `npx skills add` skips the skill without an error.
-
-## Checking a change
+Before pushing, run the check that CI replays on every pull request and every
+Monday:
 
 ```bash
 python3 scripts/check-skills.py            # needs gplay on PATH
 python3 scripts/check-skills.py --offline  # frontmatter, links and style only
 ```
 
-The script resolves every `gplay` invocation in the skills against the
-installed binary's commands and flags. A removed flag, an invented subcommand
-or a frontmatter typo fails the run instead of shipping. CI runs it on every
-pull request and every Monday, because drift usually comes from a gplay
-release rather than from a commit here.
+It resolves every documented `gplay` invocation against the installed binary,
+so a removed flag, an invented subcommand or a frontmatter typo fails the run.
 
 ## License
 
