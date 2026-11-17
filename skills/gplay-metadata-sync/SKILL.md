@@ -45,8 +45,8 @@ gplay metadata apply --dir ./metadata --dry-run    # ONLINE diff, prints per-loc
 gplay metadata apply --dir ./metadata --confirm    # publishes, live immediately
 ```
 
-`apply --dry-run` is online and prints the delta; `--output json` is the diff
-schema `{package, changes[], summary}`, so a CI gate is
+`apply --dry-run --output json` is the diff schema
+`{package, changes[], summary}`, so a CI gate is
 `jq -e '.summary.create + .summary.update > 0'`. The real `apply` is
 `--confirm`-gated and atomic: one Edit, any locale failure publishes nothing.
 
@@ -80,7 +80,6 @@ gplay metadata images apply --dir ./metadata --confirm    # publishes, live imme
   builds pulled 512px thumbnails, so re-pull before an `apply` round trip),
   checks it against the API's `sha256`, and writes the tree all or nothing: a
   failed or mismatched download leaves the destination untouched.
-- `images validate` is the same offline lint, exit `20`.
 - `images apply` is additive like the text side; `--prune` deletes online-only
   images (destructive, `--confirm`); `--locale`/`--type` scope the run.
   `--ai-generated` (`[experimental]`) attests the uploaded images are AI

@@ -53,11 +53,3 @@ gplay testers set --track qa-team --clear        # close the closed test
 
 `testers set` replaces the whole audience (no add/remove) and takes Google
 Groups only.
-
-## Typical closed-test setup
-
-```bash
-gplay tracks create qa-team
-gplay testers set --track qa-team --group qa@googlegroups.com
-gplay releases upload ./app.aab --track qa-team        # see gplay-release-flow
-```
