@@ -5,11 +5,6 @@ description: Ship Android releases through Google Play with `gplay releases`. Us
 
 # gplay release flow
 
-Drive the Google Play release lifecycle with `gplay releases`: **upload** a
-build to a track, **promote** it up the ladder, run a staged **rollout** on
-production (`halt` / `resume` / `complete` it), and **list** what a track
-holds.
-
 Shared conventions are in `gplay-cli-usage`; onboarding auth is `gplay-setup`.
 
 ## Mental model: the track ladder + the rollout state machine
@@ -111,8 +106,6 @@ gplay releases halt     --track production                           # freeze at
 gplay releases resume   --track production --confirm                 # un-freeze, continue
 gplay releases complete --track production --confirm                 # ramp to 100% → completed
 ```
-
-`halt` needs no `--confirm` even on production: it reaches no new user.
 
 A track holds one `completed` release at most. `complete` therefore drops the
 previous full rollout in the same update, as the Play Console does, and names
@@ -221,7 +214,7 @@ APK-only, legacy. When the task touches `.obb` files, read [obb.md](obb.md).
 
 Production defaults to a **draft** (ADR-0002): `--complete` / `--staged`
 there, and `rollout`, `resume` and `complete` on production, reach real users,
-so each requires `--confirm`. `halt` is exempt.
+so each requires `--confirm`. `halt` is exempt: it reaches no new user.
 
 ## Track must exist first (trackhint)
 

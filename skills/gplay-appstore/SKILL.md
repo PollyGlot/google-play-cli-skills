@@ -10,8 +10,7 @@ the catalog that store mirrors from Play, and the apps it hosts and must send to
 Google for review. Publishing your own app to Google Play is `gplay-release-flow`.
 
 Shared conventions are in `gplay-cli-usage`. Read the current flags from
-`gplay appstore <command> --help`: it is long and complete, and this skill
-carries the order the commands go in and the traps between them.
+`gplay appstore <command> --help`, which is complete.
 
 ## Caller and subject: two packages, one command
 

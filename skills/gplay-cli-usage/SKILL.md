@@ -103,11 +103,6 @@ Replace a flag when rebuilding a command line.
 | 60 | State conflict (open edit, rate-limited, ambiguous target) | sometimes |
 | 70 | Findings present: a read-only check ran to completion and reported drift (`apps audit`) | n/a, not an error |
 
-Policy by family: `3` append the named flag and re-run; `4` the environment
-forbids the write, change the deployment; `40`/`50` back off and retry;
-`2`/`10`/`11`/`20`/`30` fix the input; `60` read the diagnostic code; `70` a
-check ran and reported findings, not an error.
-
 ### Diagnostic codes: discriminate failures that share an exit code
 
 Under `--output json` a failure carries a stable envelope on **stdout**
