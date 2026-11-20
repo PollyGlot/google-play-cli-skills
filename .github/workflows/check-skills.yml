@@ -29,6 +29,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Check the comment ratchet
+        run: scripts/lint/comments.py check
+
       - name: Install gplay
         run: |
           curl -fsSL https://gplay.sh/install | sh

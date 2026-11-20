@@ -1,18 +1,4 @@
 #!/usr/bin/env python3
-"""Check every skill against the gplay binary and the repo's own rules.
-
-The skills document a CLI they do not ship, so the failure that matters is
-drift: a flag that no longer exists, a command declared absent that shipped
-three versions ago, a namespace the CLI grew that no skill names, a
-frontmatter typo that makes `npx skills add` skip the skill silently. Nothing
-else in this repo catches those.
-
-Usage:
-    python3 scripts/check-skills.py            # all checks
-    python3 scripts/check-skills.py --offline  # skip the checks needing gplay
-
-Exit code is 1 when any check fails, and every failure names a file:line.
-"""
 
 from __future__ import annotations
 
@@ -27,20 +13,11 @@ import sys
 
 GPLAY = os.environ.get("GPLAY_BIN", "gplay")
 SKILLS_GLOB = "skills/**/*.md"
-# Human-facing prose held to the same style rules as the skills.
 PROSE_FILES = ["README.md", ".github/SECURITY.md"]
-# Commands whose --help is not a gplay surface a skill would document.
 SKIP_SUBCOMMANDS = {"help", "completion", "version", "install-skills", "exit-codes"}
-# Leaf commands a skill need not name: the README owns them, or they are
-# gplay's own plumbing rather than a Play surface.
 UNCOVERED_OK = {("init",), ("edits", "status")}
-# Ceiling on any skill file. A skill that grows past it is caching --help
-# output or restating gplay-cli-usage (AGENTS.md: the --help carries the
-# flags, the skill carries the rest); the fix is a cut, not a bigger ceiling.
 MAX_WORDS = 1500
 PLACEHOLDER = re.compile(r"[<>…\[\]{}$]")
-# A bare lowercase word: what a subcommand looks like, unlike a package name,
-# a path or a flag value.
 COMMAND_WORD = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -48,8 +25,6 @@ class Findings(list):
     def add(self, path: str, line: int, message: str) -> None:
         self.append(f"{path}:{line}: {message}")
 
-
-# --- the gplay binary, memoised -------------------------------------------
 
 
 @functools.lru_cache(maxsize=None)
@@ -80,11 +55,6 @@ def subcommands(path: tuple[str, ...]) -> frozenset[str]:
 
 @functools.lru_cache(maxsize=None)
 def flags(path: tuple[str, ...]) -> frozenset[str]:
-    """Flags this command accepts, read from the Flags sections only.
-
-    Matching the whole help text would count flags merely discussed in the
-    prose ("there is no --confirm here"), which is the opposite of the point.
-    """
     _, text = help_text(path)
     return frozenset(
         re.findall(r"^\s+(?:-[a-zA-Z], )?(--[a-z0-9][a-z0-9-]*)", text, re.M)
@@ -93,12 +63,6 @@ def flags(path: tuple[str, ...]) -> frozenset[str]:
 
 @functools.lru_cache(maxsize=None)
 def required_flags(path: tuple[str, ...]) -> frozenset[str]:
-    """Flags the command refuses to run without, read from its own Flags section.
-
-    gplay marks them "(required)" or "(required: <why>)". A conditional marker
-    ("(required when the plan deletes ...)") is not an obligation on every
-    invocation, so it does not count. Global flags are never required.
-    """
     _, text = help_text(path)
     own = text.split("Flags:", 1)[-1].split("Global Flags:", 1)[0]
     return frozenset(
@@ -108,15 +72,8 @@ def required_flags(path: tuple[str, ...]) -> frozenset[str]:
     )
 
 
-# --- checks ----------------------------------------------------------------
-
 
 def check_frontmatter(findings: Findings) -> None:
-    """name/description present, name matches the folder, YAML actually parses.
-
-    An unquoted ": " in a description makes the YAML invalid, and `npx skills
-    add` skips the skill without a word. That has bitten this repo before.
-    """
     for path in sorted(glob.glob("skills/*/SKILL.md")):
         folder = os.path.basename(os.path.dirname(path))
         text = open(path, encoding="utf-8").read()
@@ -153,12 +110,6 @@ def check_relative_links(findings: Findings) -> None:
 
 
 def check_no_em_dash(findings: Findings) -> None:
-    """Prose carries no em dash (repo convention).
-
-    Fenced blocks are exempt: they quote what the binary prints, and gplay does
-    emit an em dash (see the trackhint message). Rewriting a quote would
-    document output that does not exist.
-    """
     for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)) + PROSE_FILES:
         inside = False
         for number, line in enumerate(open(path, encoding="utf-8"), start=1):
@@ -170,14 +121,8 @@ def check_no_em_dash(findings: Findings) -> None:
 
 
 def check_catalogue(findings: Findings) -> None:
-    """The README catalogue links exactly the skills the repo ships.
-
-    A new skill missing from the table is invisible on GitHub and skills.sh,
-    and a row left behind by a rename points at nothing.
-    """
     path = "README.md"
     text = open(path, encoding="utf-8").read()
-    # Only table rows count: a link in a paragraph is not a catalogue entry.
     listed = set(re.findall(r"^\| \[`[a-z0-9-]+`\]\(skills/([a-z0-9-]+)/SKILL\.md\)", text, re.M))
     shipped = {os.path.basename(os.path.dirname(p)) for p in glob.glob("skills/*/SKILL.md")}
     for name in sorted(shipped - listed):
@@ -187,7 +132,6 @@ def check_catalogue(findings: Findings) -> None:
 
 
 def check_size(findings: Findings) -> None:
-    """No skill file sprawls past MAX_WORDS."""
     for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)):
         words = len(open(path, encoding="utf-8").read().split())
         if words > MAX_WORDS:
@@ -199,7 +143,6 @@ def check_size(findings: Findings) -> None:
 
 
 def invocations(path: str):
-    """Yield (line number, argv) for every `gplay ...` line in a fenced block."""
     text = open(path, encoding="utf-8").read()
     inside, buffer, start = False, "", 0
     for number, line in enumerate(text.split("\n"), start=1):
@@ -232,7 +175,6 @@ def invocations(path: str):
 
 
 def check_invocations(findings: Findings) -> int:
-    """Every documented command and flag exists in the installed binary."""
     checked = 0
     for path in sorted(glob.glob(SKILLS_GLOB, recursive=True)):
         for number, segment, argv in invocations(path):
@@ -243,9 +185,6 @@ def check_invocations(findings: Findings) -> int:
                 if token in subcommands(tuple(resolved)):
                     resolved.append(token)
                     continue
-                # An unknown word where the group expects a subcommand is an
-                # invented verb, the drift that matters most. A group with no
-                # subcommands takes positional arguments instead, so leave it.
                 if COMMAND_WORD.match(token) and subcommands(tuple(resolved)) and resolved:
                     findings.add(
                         path, number,
@@ -266,10 +205,6 @@ def check_invocations(findings: Findings) -> int:
                     path, number,
                     f"gplay {' '.join(resolved)} does not accept {unknown}",
                 )
-            # A required flag left out of a documented invocation is a command
-            # that exits 3 or 2 the moment an agent copies it. An elided
-            # invocation ("gplay releases upload …") is a sketch, not a recipe,
-            # and --dry-run previews legitimately skip the safety flag.
             if not PLACEHOLDER.search(segment):
                 missing = required_flags(tuple(resolved)) - used
                 if "--dry-run" in used:
@@ -283,17 +218,11 @@ def check_invocations(findings: Findings) -> int:
 
 
 def leaves(path: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
-    """Every leaf command of the installed binary, as a path tuple."""
     found: set[tuple[str, ...]] = set()
     for sub in subcommands(path):
         if not path and sub in SKIP_SUBCOMMANDS:
             continue
         child = (*path, sub)
-        # The root help lists "gplay exit-codes" under help topics, which the
-        # subcommand parser reads as a command named "gplay". cobra answers an
-        # unknown child's --help with the parent's help, exit 0, so the only
-        # tell is identical text: stop the walk there instead of recursing
-        # into the whole tree again.
         if help_text(child)[1] == help_text(path)[1]:
             continue
         below = subcommands(child)
@@ -302,14 +231,6 @@ def leaves(path: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
 
 
 def check_coverage(findings: Findings) -> None:
-    """Every leaf command the binary ships is named by at least one skill.
-
-    The invocation check only sees what a skill already documents, so a whole
-    namespace added by a gplay release (`signing` in v1.3.0) sails through it.
-    This is the inverse: walk the binary, then look for each leaf in the
-    skills. A leaf counts as covered when some skill mentions its full path
-    (`gplay signing enroll`, or `signing enroll` in prose) at least once.
-    """
     corpus = "\n".join(
         open(path, encoding="utf-8").read()
         for path in sorted(glob.glob(SKILLS_GLOB, recursive=True))
@@ -332,7 +253,6 @@ def check_coverage(findings: Findings) -> None:
 
 
 def check_exit_code_table(findings: Findings) -> None:
-    """The table in gplay-cli-usage lists exactly the codes `gplay exit-codes` prints."""
     path = "skills/gplay-cli-usage/SKILL.md"
     if not os.path.exists(path):
         return
@@ -349,8 +269,6 @@ def check_exit_code_table(findings: Findings) -> None:
     if invented:
         findings.add(path, line, f"exit-code table lists codes the CLI does not print: {invented}")
 
-
-# --- entry point -----------------------------------------------------------
 
 
 def main() -> int:
