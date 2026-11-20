@@ -241,29 +241,45 @@ def delete_blocks(root: Path, targets: list[Block]) -> list[str]:
 
 def code_tokens(src: bytes, lang: str) -> list[bytes]:
     tree = get_parser(lang).parse(src)
-    dropped = {(n.start_byte, n.end_byte) for n in comment_nodes(tree.root_node)
-               if not DIRECTIVE.search(src[n.start_byte:n.end_byte].decode("utf8", "replace"))}
+    dropped = [(n.start_byte, n.end_byte) for n in comment_nodes(tree.root_node)
+               if not DIRECTIVE.search(src[n.start_byte:n.end_byte].decode("utf8", "replace"))]
     if lang == "python":
-        dropped |= {(n.start_byte, n.end_byte) for n, _ in docstring_nodes(tree.root_node)}
-    tokens, stack = [], [tree.root_node]
+        dropped += [(n.start_byte, n.end_byte) for n, _ in docstring_nodes(tree.root_node)]
+    masked = bytearray(src)
+    for a, b in dropped:
+        masked[a:b] = b" " * (b - a)
+    skip = set(dropped)
+    tokens, stack, prev_end = [], [tree.root_node], None
     while stack:
         n = stack.pop()
-        if (n.start_byte, n.end_byte) in dropped:
+        if isinstance(n, bytes):
+            tokens.append(n)
+            continue
+        if (n.start_byte, n.end_byte) in skip:
             continue
         if n.child_count == 0:
+            if prev_end is not None and b"\n" in masked[prev_end:n.start_byte]:
+                tokens.append(b"\n")
             tokens.append(src[n.start_byte:n.end_byte])
+            prev_end = n.end_byte
         else:
+            tokens.append(n.type.encode() + b"(")
+            stack.append(b")")
             stack.extend(reversed(n.children))
     return tokens
 
 
 def only_comments_changed(root: Path, base: str) -> list[str]:
-    names = subprocess.run(["git", "-C", str(root), "diff", "--name-only", "--diff-filter=M", base],
-                           capture_output=True, text=True, check=True).stdout.split()
+    status = subprocess.run(["git", "-C", str(root), "diff", "--name-status", "--no-renames", base],
+                            capture_output=True, text=True, check=True).stdout.splitlines()
     changed = []
-    for rel in names:
+    for row in status:
+        flag, rel = row.split("\t", 1)
         lang = LANGS.get(Path(rel).suffix)
-        if not lang:
+        if not lang or GENERATED_PATH.search(rel):
+            continue
+        if flag != "M":
+            changed.append(rel)
             continue
         old = subprocess.run(["git", "-C", str(root), "show", f"{base}:{rel}"], capture_output=True,
                              check=True).stdout
