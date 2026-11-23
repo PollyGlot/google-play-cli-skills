@@ -54,7 +54,11 @@ gplay metadata apply --dir ./metadata --confirm    # publishes, live immediately
 
 Every file gplay reads or writes under `--dir` must resolve inside the repo
 once symlinks are followed: a `title.txt` symlinked to a file outside the
-tree, or a pre-placed link where `pull` will write, is refused. Locale names
+tree, or a pre-placed link where `pull` will write, is refused with exit `2`
+(a usage error, not the `20` of a lint failure). A locale directory that is
+itself a symlink is followed when it stays inside the tree and refused
+otherwise, never skipped, so `--prune` no longer plans its Listing for
+deletion; a dangling locale link is an error. Locale names
 are checked in BCP 47 (`en-US`, not `en_US`) before an Edit opens. Monorepos
 that share translations or assets through symlinks can set
 `GPLAY_ALLOW_EXTERNAL_SYMLINKS=1`: symlink egress is then followed, one `NOTE`

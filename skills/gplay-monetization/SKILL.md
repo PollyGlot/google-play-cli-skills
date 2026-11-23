@@ -26,6 +26,9 @@ pull  →  edit the .json files  →  apply --dry-run  →  apply [--confirm]
 One `<productId>.json` per product, holding the **API resource verbatim**
 minus server-derived noise. `pull` then `apply` with no edits is a guaranteed
 no-op. Commit the directory; the diff in review *is* the catalog change.
+A file that is invalid JSON, or whose `productId` does not match its
+filename, fails `apply` with exit `2` before auth; an unreadable or dangling
+file exits `20` and names it. Fix the file, never retry.
 
 ## Mirror semantics: the trap if you know `metadata`
 
