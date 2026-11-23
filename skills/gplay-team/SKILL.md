@@ -18,7 +18,8 @@ gplay team permissions --output json     # marks the admin-conferring alias and 
 
 Writes take **`--role <bundle>` XOR `--permissions <alias,…>`** (raw `CAN_*`
 enums accepted); `team users` resolves in account scope, `team grants` in app
-scope.
+scope. A blank selector (`--permissions ""`, `--role ""`) is refused with exit
+`2` before any API call: to empty a member's set, use `team users set --clear`.
 
 ## Account-wide members
 

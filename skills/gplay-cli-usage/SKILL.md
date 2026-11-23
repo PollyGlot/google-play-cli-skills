@@ -1,6 +1,6 @@
 ---
 name: gplay-cli-usage
-description: "Conventions every gplay command shares: credential and package resolution, output formats, exit codes, `--dry-run`/`--confirm`/`GPLAY_READONLY` gates, the Edit lifecycle. Use when running any gplay command, wiring gplay into CI, branching on an exit code, or introspecting the Android Publisher API offline with `gplay schema`."
+description: "Conventions every gplay command shares: credential and package resolution, output formats, exit codes, `--dry-run`/`--confirm`/`GPLAY_READONLY` gates, the Edit lifecycle. Use when running any gplay command, wiring gplay into CI, branching on an exit code, or introspecting the Google Play APIs offline with `gplay schema`."
 ---
 
 # gplay CLI conventions (foundation)
@@ -26,9 +26,12 @@ other surface holds until a major bump, so CI can pin `v1`
 ## `gplay schema`: the offline API map
 
 Where `--help` documents gplay's own surface, `gplay schema <query>`
-introspects the Android Publisher API offline (no credential, no HTTP):
-methods, REST paths, types, enums. `[experimental]`; flags in
-`gplay schema --help`.
+introspects the Google Play APIs offline (no credential, no HTTP):
+methods, REST paths, types, enums. The index is not only Android Publisher:
+it also embeds Play Developer Reporting, Games Management, Games
+Configuration and Custom App Publishing, including methods no gplay command
+calls. Method ids carry their service name, so `gplay schema --list` shows
+what is covered. `[experimental]`; flags in `gplay schema --help`.
 
 ```bash
 gplay schema edits.tracks.update    # a method's request/response, one hop deep
