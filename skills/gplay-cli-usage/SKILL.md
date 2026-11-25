@@ -93,16 +93,16 @@ Replace a flag when rebuilding a command line.
 | Code | Meaning | Retry-safe |
 |---|---|---|
 | 0 | Success | n/a |
-| 1 | Generic error (fallback) | no |
+| 1 | Generic error (fallback; a request that could not be built) | no |
 | 2 | CLI misuse (unknown flag/command, bad value, missing arg) | no |
 | 3 | A named safety flag is missing (`--confirm` / `--grant-admin`), re-run with it | yes, with the flag |
 | 4 | Denied by environment policy (`GPLAY_READONLY`), a mutating command was refused | no, change the environment |
 | 10 | Authentication failure | no |
 | 11 | Authorization (403, SA not invited) | no |
-| 20 | Client-side validation (bad AAB, unknown locale, …) | no |
-| 30 | API 4xx (not found, conflict, gone, …) | no |
+| 20 | Client-side validation (bad AAB, unknown locale, unopenable upload file, …) | no |
+| 30 | API 4xx (not found, conflict, gone, …), or an unreadable 2xx body | no |
 | 40 | API 5xx (upstream unhealthy) | **yes** |
-| 50 | Network (timeout, DNS, refused) | **yes** |
+| 50 | Network only (timeout, DNS, refused) | **yes** |
 | 60 | State conflict (open edit, rate-limited, ambiguous target) | sometimes |
 | 70 | Findings present: a read-only check ran to completion and reported drift (`apps audit`) | n/a, not an error |
 
@@ -122,6 +122,11 @@ limit); branch on `retryable`. What the failed call targeted is
 there, since `package` is present only when `resource.kind` is `package`.
 Catalog: `gplay exit-codes`, or `gplay schema --codes --output json` for a
 machine.
+
+A 2xx body gplay cannot decode, or missing a field it needs, is
+`API_ERROR`, exit `30`, not retryable (gplay 2.6.1+): a retry gets the same
+body. A failure before sending is exit `20` (upload file) or `1` (request
+not buildable), never `50`.
 
 ## Safety: `--dry-run` everywhere, `--confirm` for live writes
 
