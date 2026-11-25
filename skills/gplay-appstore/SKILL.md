@@ -66,6 +66,8 @@ moment they print; `create` has no delete and a second run is exit 60, so a
 script that runs twice guards it.
 
 The `submit` body is one JSON file whose shape `gplay appstore submit --help`
-prints. Keep it in version control: the API answers with no fields and offers
-no read-back, so the file is the only record of what was submitted and the
-base for the next one.
+prints. Keep it in version control: the API offers no read-back, so the file
+is the only record of what was submitted and the base for the next one. The
+response carries `updateId`, the id of the version this update submitted:
+store it next to the file, it is what ties later publishing signals from
+Google back to this submission.
