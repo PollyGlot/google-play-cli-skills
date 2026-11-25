@@ -55,7 +55,9 @@ gplay reviews history --columns date,stars,device,reply --output json   # parsed
 Cloud Storage, a distinct auth surface: working `reviews list` credentials do
 not guarantee bucket access (scope `devstorage.read_only`, "View app
 information" permission). Reports are monthly exports, so the current month
-lags; recent days come from `reviews list`.
+lags; recent days come from `reviews list`. A truncated export (a UTF-16 file
+with an odd byte count) exits `20` with no rows, as `gplay reports` does,
+rather than returning a partial month.
 
 ## Reply to reviews
 

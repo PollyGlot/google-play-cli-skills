@@ -94,7 +94,9 @@ only, the one place Play accepts it.
 Release notes are checked before the Edit opens, `--dry-run` included: an
 empty note or one over 500 Unicode characters exits `20` and names the locale.
 Same check on `releases upload`. A `default.txt` is only checked when it is
-actually used.
+actually used. A `--release-notes-dir` that lacks a locale the source release
+carries would delete those notes on `--to`, so `promote` refuses it with exit
+`2` and names the locale, `--plan` included (gplay 2.6.0+).
 
 ## Staged rollout: rollout / halt / resume / complete
 
@@ -204,7 +206,10 @@ gplay releases sharing upload ./app.aab --dry-run
 ```
 
 `releases sharing upload` (`[experimental]`) bypasses tracks and the Edit
-lifecycle: a private QA link, not a release. No `--confirm`.
+lifecycle: a private QA link, not a release. No `--confirm`, so its
+`--dry-run --output json` always carries `"requires": []`. An extension that
+names neither format (`build.bin`) exits `2` before any call, as on
+`releases upload`: pass `--format apk|bundle`.
 
 ## Legacy OBB expansion files
 
